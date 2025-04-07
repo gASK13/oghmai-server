@@ -19,7 +19,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Validate Terraform
-        uses: hashicorp/setup-terraform@v2
         run: |
           cd infra
           terraform fmt
@@ -40,7 +39,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Deploy Terraform
-        uses: hashicorp/setup-terraform@v2
         run: |
           cd infra
           terraform fmt
