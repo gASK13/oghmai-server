@@ -102,15 +102,6 @@ Optionally source: "ai-suggested" / "user-input"
 
 “Parole imparate” screen – list + detail + ask
 
-## Later Phase – Mastery Mode
-Add spaced repetition logic
-
-Store last test date, test count, correctness, etc.
-
-Connect to Cognito
-
-AI-generated mini tests (MCQ, fill-in, usage validation)
-
 ## MVP Next Steps
 - [ ] Set up Terraform base (Lambda, API Gateway, Dynamo)
 - [ ] Build and test FastAPI backend locally
