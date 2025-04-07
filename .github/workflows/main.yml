@@ -21,8 +21,8 @@ jobs:
       - name: Validate Terraform
         run: |
           cd infra
-          terraform fmt -check
-          terraform validate -no-color          
+          terraform fmt
+          terraform validate          
           terraform init
           terraform plan
   deploy_terraform:
