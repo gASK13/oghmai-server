@@ -88,6 +88,7 @@ resource "aws_lambda_function" "api_handler" {
   handler       = "main.handler"
   runtime       = "python3.11"
   filename      = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   timeout       = 20 # Increase from default (3s) to allow for AI calls later
   memory_size   = 256
   publish       = true
