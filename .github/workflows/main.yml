@@ -22,8 +22,8 @@ jobs:
         run: |
           cd infra
           terraform fmt
-          terraform validate          
           terraform init
+          terraform validate                    
           terraform plan
   deploy_terraform:
     if: ${{ github.ref == 'refs/heads/main' }}
