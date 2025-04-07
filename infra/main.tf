@@ -1,7 +1,14 @@
-# MVP Infra with Terraform: Lambda + API Gateway + DynamoDB (Provisioned)
-
 provider "aws" {
   region = "us-east-1" # Change as needed
+}
+
+terraform {
+  backend "s3" {
+    bucket  = "oghmai-terraform-state"
+    key     = "env/dev/terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
+  }
 }
 
 #############################
@@ -37,7 +44,7 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "dynamodb:*",
           "bedrock:*" # for future use
         ],
-        Effect = "Allow",
+        Effect   = "Allow",
         Resource = "*"
       }
     ]
@@ -48,12 +55,12 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
 # DynamoDB Table
 #############################
 resource "aws_dynamodb_table" "vocabulary" {
-  name         = "oghmai_vocabulary_words"
-  billing_mode = "PROVISIONED"
+  name           = "oghmai_vocabulary_words"
+  billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
-  hash_key     = "user_id"
-  range_key    = "word"
+  hash_key       = "user_id"
+  range_key      = "word"
 
   attribute {
     name = "user_id"
@@ -81,7 +88,7 @@ resource "aws_lambda_function" "api_handler" {
   handler       = "main.handler"
   runtime       = "python3.11"
   filename      = data.archive_file.lambda_zip.output_path
-  timeout       = 20  # Increase from default (3s) to allow for AI calls later
+  timeout       = 20 # Increase from default (3s) to allow for AI calls later
   memory_size   = 256
   publish       = true
 }
@@ -137,7 +144,7 @@ resource "aws_api_gateway_stage" "oghmai_stage" {
 
 # Deployment
 resource "aws_api_gateway_deployment" "oghmai_deployment" {
-  depends_on = [aws_api_gateway_integration.lambda_integration]
+  depends_on  = [aws_api_gateway_integration.lambda_integration]
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
 }
 
@@ -156,7 +163,7 @@ resource "aws_api_gateway_usage_plan" "oghmai_usage_plan" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.oghmai_api.id
-    stage = aws_api_gateway_stage.oghmai_stage.stage_name
+    stage  = aws_api_gateway_stage.oghmai_stage.stage_name
   }
 
   throttle_settings {
