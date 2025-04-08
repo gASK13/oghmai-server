@@ -87,6 +87,7 @@ resource "aws_lambda_layer_version" "oghmai_layer" {
   layer_name          = "oghmai-layer"
   compatible_runtimes = ["python3.11"]
   description         = "Basic OghmAI layer with FastAPI and Mangum dependencies."
+  source_code_hash    = filebase64sha256("../layers/oghmai_layer.zip")
 }
 
 resource "aws_lambda_function" "api_handler" {
