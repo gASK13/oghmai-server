@@ -180,7 +180,7 @@ resource "aws_api_gateway_stage" "oghmai_stage" {
 
 # Deployment
 resource "aws_api_gateway_deployment" "oghmai_deployment" {
-  depends_on  = [aws_api_gateway_integration.lambda_integration]
+  depends_on  = [aws_api_gateway_integration.integrations]
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
 }
 
