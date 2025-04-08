@@ -106,12 +106,13 @@ data "archive_file" "lambda_zip" {
   output_path = "lambda.zip"
 }
 
+# TODO: Built by CI/CD pipeline, this is kind of a pain point now and should be automated better
 resource "aws_lambda_layer_version" "oghmai_layer" {
   filename            = "../layers/oghmai_layer.zip"
   layer_name          = "oghmai-layer"
   compatible_runtimes = ["python3.11"]
   description         = "Basic OghmAI layer with FastAPI and Mangum dependencies."
-  source_code_hash    = filebase64sha256("../layers/oghmai_layer.zip")
+  source_code_hash    = filebase64sha256("../lambda/requirements.txt")
 }
 
 resource "aws_lambda_function" "api_handler" {
