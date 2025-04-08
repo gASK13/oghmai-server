@@ -82,6 +82,13 @@ data "archive_file" "lambda_zip" {
   output_path = "lambda.zip"
 }
 
+resource "aws_lambda_layer_version" "oghmai_layer" {
+  filename   = "../layers/oghmai_layer.zip"
+  layer_name = "oghmai-layer"
+  compatible_runtimes = ["python3.11"]
+  description = "Basic OghmAI layer with FastAPI and Mangum dependencies."
+}
+
 resource "aws_lambda_function" "api_handler" {
   function_name = "oghmai-vocab-api-handler"
   role          = aws_iam_role.lambda_exec_role.arn
@@ -92,6 +99,9 @@ resource "aws_lambda_function" "api_handler" {
   timeout       = 20 # Increase from default (3s) to allow for AI calls later
   memory_size   = 256
   publish       = true
+  layers = [
+    aws_lambda_layer_version.oghmai_layer.arn
+  ]
 }
 
 #############################
