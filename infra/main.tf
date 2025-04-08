@@ -11,6 +11,30 @@ terraform {
   }
 }
 
+##############################
+# Endpoint definitions
+##############################
+locals {
+  endpoints = {
+    test = {
+      method           = "GET"
+      path_part        = "test"
+      api_key_required = true
+    }
+    describe_word = {
+      method           = "POST"
+      path_part        = "describe-word"
+      api_key_required = true
+    }
+    save_word = {
+      method           = "POST"
+      path_part        = "save-word"
+      api_key_required = true
+    }
+  }
+}
+
+
 #############################
 # IAM Role for Lambda
 #############################
@@ -113,27 +137,27 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
   description = "OghmAI REST API for vocabulary app"
 }
 
-# Resource: /test
-resource "aws_api_gateway_resource" "root" {
+resource "aws_api_gateway_resource" "paths" {
+  for_each    = local.endpoints
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
   parent_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
-  path_part   = "test"
+  path_part   = each.value.path_part
 }
 
-# Method: GET on "test"
-resource "aws_api_gateway_method" "guess_get" {
+resource "aws_api_gateway_method" "methods" {
+  for_each         = local.endpoints
   rest_api_id      = aws_api_gateway_rest_api.oghmai_api.id
-  resource_id      = aws_api_gateway_resource.root.id
-  http_method      = "GET"
+  resource_id      = aws_api_gateway_resource.paths[each.key].id
+  http_method      = each.value.method
   authorization    = "NONE"
-  api_key_required = true
+  api_key_required = each.value.api_key_required
 }
 
-# Integration with Lambda (proxy)
-resource "aws_api_gateway_integration" "lambda_integration" {
+resource "aws_api_gateway_integration" "integrations" {
+  for_each                = local.endpoints
   rest_api_id             = aws_api_gateway_rest_api.oghmai_api.id
-  resource_id             = aws_api_gateway_resource.root.id
-  http_method             = aws_api_gateway_method.guess_get.http_method
+  resource_id             = aws_api_gateway_resource.paths[each.key].id
+  http_method             = aws_api_gateway_method.methods[each.key].http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.api_handler.invoke_arn

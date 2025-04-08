@@ -18,8 +18,8 @@ class WordResult(BaseModel):
 async def test():
     return {"message": "Hello from FastAPI!"}
 
-@app.post("/guess-word", response_model=WordResult)
-async def guess_word(req: DescriptionRequest):
+@app.post("/describe-word", response_model=WordResult)
+async def describe_word(req: DescriptionRequest):
     try:
         # In the future: Call Bedrock or any AI API here
         # For now, fake result based on simple matching
