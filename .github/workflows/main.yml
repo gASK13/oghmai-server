@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p layers/oghmai_layer/python
           pip install -r lambda/requirements.txt -t layers/oghmai_layer/python
-          zip -r layers/oghmai_layer.zip layers/oghmai_layer/python
+          cd layers/oghmai_layer && zip -r ../oghmai_layer.zip python/*
       - uses: aws-actions/configure-aws-credentials@v2
         name: Setup AWS Credentials
         with:

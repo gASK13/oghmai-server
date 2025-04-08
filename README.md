@@ -1,6 +1,13 @@
 # OghmAI Backend
 
-A simple custom backend for OghmAI (a POC Android language learning AI app). Written to try couple things - creation of an Android app, creation of a AI enabled app in AWS and last but not least in AI assisted app creation (using AI as a partner).
+A simple custom backend for OghmAI (a POC Android language learning AI app). 
+
+Written to try couple things:
+- creation of an Android app
+- creation of a AI enabled app in AWS
+- last but not least in AI assisted app creation (using AI as a partner and assistant)
+
+> ℹ️ **Info:** Most of the code generated in this repo so far is AI generated based on continuous prompting (with manual changes where required or appropriate). This is an experiment both in development on those technologies and into trying "vibe coding".
 
 ## What is OghmAI?
 
@@ -103,7 +110,7 @@ Optionally source: "ai-suggested" / "user-input"
 “Parole imparate” screen – list + detail + ask
 
 ## MVP Next Steps
-- [ ] Set up Terraform base (Lambda, API Gateway, Dynamo)
+- [x] Set up Terraform base (Lambda, API Gateway, Dynamo)
 - [ ] Build and test FastAPI backend locally
 - [ ] Integrate Bedrock for Italian prompts
 - [ ] Connect Android client to backend
