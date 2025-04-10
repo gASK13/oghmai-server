@@ -22,7 +22,7 @@ def bedrock_describe_word(definition: str) -> WordResult:
             print(f'Prompt: {prompt}')
             raw_output = call_bedrock(prompt)
             print(f'Raw output: {raw_output}')
-            parsed = json.loads(raw_output["output"]["message"]["content"][0])  # reverse engineered for now
+            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
             print(f'Parsed output: {parsed}')
             return WordResult(**parsed)
 
