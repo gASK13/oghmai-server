@@ -1,18 +1,12 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from mangum import Mangum
+import boto3
+from models import *
+from bedrock_service import *
 
 app = FastAPI()
 handler = Mangum(app)
-
-class DescriptionRequest(BaseModel):
-    description: str
-
-class WordResult(BaseModel):
-    word: str
-    translation: str
-    definition: str
-    examples: list[str]
+client = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 @app.get("/test")
 async def test():
@@ -21,31 +15,7 @@ async def test():
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
     try:
-        # In the future: Call Bedrock or any AI API here
-        # For now, fake result based on simple matching
-        # You can replace this with real logic later
-
-        if "small round red fruit" in req.description.lower():
-            result = WordResult(
-                word="pomodoro",
-                translation="tomato",
-                definition="Un frutto rosso usato spesso nelle insalate o nei sughi.",
-                examples=[
-                    "Ho comprato un chilo di pomodori al mercato.",
-                    "Il pomodoro è un ingrediente base della cucina italiana.",
-                ],
-            )
-        else:
-            result = WordResult(
-                word="parola",
-                translation="word",
-                definition="Unità di significato linguistico.",
-                examples=[
-                    "Questa è una parola difficile da spiegare.",
-                    "Le parole hanno un grande potere.",
-                ],
-            )
-
+        result = bedrock_describe_word("Describe the word 'pomodoro' in Italian.")
         return result
 
     except Exception as e:

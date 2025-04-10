@@ -1,0 +1,14 @@
+Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizione '{definition}' in un formato strutturato:
+
+1. La parola che più probabilmente corrisponde alla descrizione
+2. La traduzione in inglese della parola.
+3. Una definizione molto breve della parola.
+4. Tre frasi di esempio che utilizzano la parola in contesti diversi, utilizzando forme e tempi verbali diversi ove possibile.
+
+Struttura l'output in questo modo:
+{
+'word': 'la parola',
+'translation': 'traduzione in inglese',
+'definition': 'definizione della parola',
+'examples': ['esempio 1', 'esempio 2', 'esempio 3']
+}

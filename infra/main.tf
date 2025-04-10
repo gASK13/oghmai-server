@@ -101,8 +101,17 @@ resource "aws_dynamodb_table" "vocabulary" {
 # Lambda Function
 #############################
 data "archive_file" "lambda_zip" {
-  type        = "zip"
-  source_dir  = "../lambda"
+  type = "zip"
+  source = [
+    {
+      path = "../lambda"
+      dest = "/"
+    },
+    {
+      path = "../models"
+      dest = "models"
+    }
+  ]
   output_path = "lambda.zip"
 }
 
