@@ -2,6 +2,7 @@ import boto3
 from botocore.exceptions import ClientError
 from models import WordResult
 import os
+from fastapi import HTTPException
 
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table_name = os.getenv("DYNAMODB_TABLE", "oghmai_vocabulary_words")
@@ -23,6 +24,5 @@ def save_word(user_id: str, word_result: WordResult):
         return {"status": "ok", "message": f"Word '{word_result.word}' saved for user '{user_id}'"}
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            return {"status": "exists", "message": "Word already exists for this user/language."}
-        raise
+            raise HTTPException(status_code=409, detail="Word already exists for this user/language.")
 
