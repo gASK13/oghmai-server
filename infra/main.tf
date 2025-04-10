@@ -166,7 +166,7 @@ resource "aws_api_gateway_method" "methods" {
 }
 
 resource "aws_api_gateway_integration" "integrations" {
-  for_each                = ws_api_gateway_method.methods
+  for_each                = aws_api_gateway_method.methods
   rest_api_id             = each.value.rest_api_id
   resource_id             = each.value.resource_id
   http_method             = each.value.http_method
