@@ -18,7 +18,7 @@ def save_word(user_id: str, word_result: WordResult):
                 "definition": word_result.definition,
                 "examples": word_result.examples,
             },
-            ConditionExpression="attribute_not_exists(user_id) AND attribute_not_exists(word) AND attribute_not_exists(language)"
+            ConditionExpression="attribute_not_exists(user_id) AND attribute_not_exists(word) AND attribute_not_exists(lang)"
         )
         return {"status": "ok", "message": f"Word '{word_result.word}' saved for user '{user_id}'"}
     except ClientError as e:
