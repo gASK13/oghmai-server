@@ -10,7 +10,7 @@ MAX_RETRIES = 3
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 def load_prompt_template(name: str) -> str:
-    with open(f"prompts/{name}.txt", "r", encoding="utf-8") as f:
+    with open(f"resources/prompts/{name}.txt", "r", encoding="utf-8") as f:
         return f.read()
 
 def bedrock_describe_word(definition: str) -> WordResult:
