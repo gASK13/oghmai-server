@@ -52,8 +52,8 @@ locals {
   path_map = {
     for p in local.all_paths :
     p => {
-      name   = regex("[^/]+$", p)
-      parent = length(split("/", p)) == 1 ? "/" : join("/", slice(split("/", p), 0, length(split("/", p)) - 1))
+      path_part = split("/", path)[-1]
+      parent    = length(split("/", path)) > 1 ? join("/", slice(split("/", path), 0, length(split("/", path)) - 1)) : null
     }
   }
 }
@@ -165,8 +165,8 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
 resource "aws_api_gateway_resource" "resources" {
   for_each    = local.path_map
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
-  parent_id   = each.value.parent == "/" ? aws_api_gateway_rest_api.oghmai_api.root_resource_id : aws_api_gateway_resource.resources[each.value.parent].id
-  path_part   = each.value.name
+  parent_id   = each.value.parent != null ? (aws_api_gateway_resource.resources[each.value.parent].id) : aws_api_gateway_rest_api.oghmai_api.root_resource_id
+  path_part   = each.value.path_part
 }
 
 resource "aws_api_gateway_method" "methods" {
