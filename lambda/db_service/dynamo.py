@@ -1,7 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-from sqlalchemy.testing.plugin.plugin_base import logging
-
+import logging
 from models import WordResult
 import os
 from fastapi import HTTPException
