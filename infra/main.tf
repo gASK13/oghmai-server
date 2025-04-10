@@ -26,6 +26,11 @@ locals {
       path_part        = "word"
       api_key_required = true
     }
+    delete_word = {
+      method           = "DELETE"
+      path_part        = "word"
+      api_key_required = true
+    }
     describe_word = {
       method           = "POST"
       path_part        = "describe-word"
@@ -150,7 +155,7 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
 }
 
 resource "aws_api_gateway_resource" "paths" {
-  for_each    = local.unique_paths
+  for_each    = toset(local.unique_paths)
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
   parent_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
   path_part   = each.key

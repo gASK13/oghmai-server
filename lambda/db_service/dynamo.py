@@ -1,5 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
+from sqlalchemy.testing.plugin.plugin_base import logging
+
 from models import WordResult
 import os
 from fastapi import HTTPException
@@ -36,6 +38,23 @@ def get_word(user_id: str, lang: str, word: str):
         examples=item["examples"]
     )
     return word_result
+
+def delete_word(user_id: str, lang: str, word: str):
+    try:
+        response = table.delete_item(
+            Key={
+                "user_id": user_id,
+                "word": word
+            },
+            ConditionExpression=Attr("lang").eq(lang)
+        )
+        return {"status": "ok", "message": f"Word '{word}' deleted for user '{user_id}'"}
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            raise HTTPException(status_code=404, detail="Word not found.")
+        else:
+            logging.exception("Error deleting word")
+            raise HTTPException(status_code=500, detail="Internal Server Error")
 
 def purge_words(user_id: str, lang: str):
     response = table.query(

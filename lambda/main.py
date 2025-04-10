@@ -40,6 +40,12 @@ async def get_word(lang: str, word: str):
     word_result = db_service.get_word(user_id, lang, word)
     return word_result
 
+@app.delete("/word/{word}")
+async def get_word(lang: str, word: str):
+    user_id = "test"
+    lang = 'IT'
+    return db_service.delete_word(user_id, lang, word)
+
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
     result = bedrock_service.describe_word(req.description)
