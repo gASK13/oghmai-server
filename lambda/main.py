@@ -15,8 +15,10 @@ async def test():
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
     try:
-        result = bedrock_describe_word("Describe the word 'pomodoro' in Italian.")
+        result = bedrock_describe_word(req.description)
         return result
 
     except Exception as e:
+        print(f"Error during describe_word: {e}")
+        # print stacktrace
         raise HTTPException(status_code=500, detail=str(e))
