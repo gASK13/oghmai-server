@@ -17,37 +17,45 @@ terraform {
 locals {
   endpoints = {
     list_words = {
-      method           = "GET"
-      path_part        = "words"
-      api_key_required = true
+      method    = "GET"
+      full_path = "words"
     }
     get_word = {
-      method           = "GET"
-      path_part        = "word"
-      api_key_required = true
+      method    = "GET"
+      full_path = "word/{word}"
     }
     delete_word = {
-      method           = "DELETE"
-      path_part        = "word"
-      api_key_required = true
+      method    = "DELETE"
+      full_path = "word/{word}"
     }
     describe_word = {
-      method           = "POST"
-      path_part        = "describe-word"
-      api_key_required = true
+      method    = "POST"
+      full_path = "describe-word"
     }
     save_word = {
-      method           = "POST"
-      path_part        = "save-word"
-      api_key_required = true
+      method    = "POST"
+      full_path = "save-word"
     }
     words = {
-      method           = "DELETE"
-      path_part        = "words"
-      api_key_required = true
+      method    = "DELETE"
+      full_path = "words"
     }
   }
-  unique_paths = distinct([for ep in local.endpoints : ep.path_part])
+
+  all_paths = distinct(flatten([
+    for ep in local.endpoints : [
+      for i in range(length(split("/", ep.full_path))) : join("/", slice(split("/", ep.full_path), 0, i + 1))
+    ]
+  ]))
+
+  # Map from path to its parent
+  path_map = {
+    for p in local.all_paths :
+    p => {
+      name   = regex("[^/]+$", p)
+      parent = length(split("/", p)) == 1 ? "/" : join("/", slice(split("/", p), 0, length(split("/", p)) - 1))
+    }
+  }
 }
 
 
@@ -154,18 +162,22 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
   description = "OghmAI REST API for vocabulary app"
 }
 
-resource "aws_api_gateway_resource" "paths" {
-  for_each    = toset(local.unique_paths)
+resource "aws_api_gateway_resource" "resources" {
+  for_each    = local.path_map
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
-  parent_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
-  path_part   = each.key
+  parent_id   = each.value.parent == "/" ? aws_api_gateway_rest_api.oghmai_api.root_resource_id : aws_api_gateway_resource.resources[each.value.parent].id
+  path_part   = each.value.name
 }
 
 resource "aws_api_gateway_method" "methods" {
-  for_each         = local.endpoints
+  for_each = {
+    for ep in local.endpoints :
+    "${ep.full_path}_${ep.http_method}" => ep
+  }
+
   rest_api_id      = aws_api_gateway_rest_api.oghmai_api.id
-  resource_id      = aws_api_gateway_resource.paths[each.value.path_part].id
-  http_method      = each.value.method
+  resource_id      = aws_api_gateway_resource.resources[each.value.full_path].id
+  http_method      = each.value.http_method
   authorization    = "NONE"
   api_key_required = each.value.api_key_required
 }
