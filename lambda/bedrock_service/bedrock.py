@@ -55,8 +55,7 @@ def call_bedrock(prompt: str, temperature=0.7, max_tokens=500):
             "utf-8"
         ),
         contentType="application/json",
-        accept="application/json",
-        performanceConfig={"latency": "standard"}
+        accept="application/json"
     )
     response_body = response["body"].read().decode("utf-8")
     return json.loads(response_body)
