@@ -20,14 +20,6 @@ locals {
       method    = "GET"
       full_path = "words"
     }
-    get_word = {
-      method    = "GET"
-      full_path = "word/{word}"
-    }
-    delete_word = {
-      method    = "DELETE"
-      full_path = "word/{word}"
-    }
     describe_word = {
       method    = "POST"
       full_path = "describe-word"
