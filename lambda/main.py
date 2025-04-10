@@ -24,7 +24,7 @@ async def describe_word(req: DescriptionRequest):
         # print stacktrace
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/save-word", tags=["Vocabulary"])
+@app.post("/save-word")
 async def save_word(word_result: WordResult):
     try:
         user_id = "test"  # For now hardcoded

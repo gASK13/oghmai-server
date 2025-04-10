@@ -13,7 +13,7 @@ def save_word(user_id: str, word_result: WordResult):
             Item={
                 "user_id": user_id,
                 "word": word_result.word,
-                "language": word_result.language,
+                "lang": word_result.language,
                 "translation": word_result.translation,
                 "definition": word_result.definition,
                 "examples": word_result.examples,
