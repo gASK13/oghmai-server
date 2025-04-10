@@ -50,10 +50,10 @@ locals {
 
   # Map from path to its parent
   path_map = {
-    for path in local.all_paths :
-    path => {
-      path_part = split("/", path)[-1]
-      parent    = length(split("/", path)) > 1 ? join("/", slice(split("/", path), 0, length(split("/", path)) - 1)) : null
+    for p in local.all_paths :
+    p => {
+      path_part = regex("[^/]+$", p)
+      parent    = length(split("/", p)) > 1 ? join("/", slice(split("/", p), 0, length(split("/", p)) - 1)) : null
     }
   }
 }
