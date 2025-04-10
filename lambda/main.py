@@ -38,9 +38,6 @@ async def describe_word(req: DescriptionRequest):
 
 @app.post("/save-word")
 async def save_word(word_result: WordResult):
-    try:
-        user_id = "test"  # For now hardcoded
-        result = db_service.save_word(user_id, word_result)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    user_id = "test"  # For now hardcoded
+    result = db_service.save_word(user_id, word_result)
+    return result
