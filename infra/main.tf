@@ -16,9 +16,14 @@ terraform {
 ##############################
 locals {
   endpoints = {
-    test = {
+    list_words = {
       method           = "GET"
-      path_part        = "test"
+      path_part        = "words"
+      api_key_required = true
+    }
+    get_word = {
+      method           = "GET"
+      path_part        = "word"
       api_key_required = true
     }
     describe_word = {

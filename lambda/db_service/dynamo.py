@@ -9,6 +9,34 @@ dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table_name = os.getenv("DYNAMODB_TABLE", "oghmai_vocabulary_words")
 table = dynamodb.Table(table_name)
 
+def get_words(user_id: str, lang: str):
+    response = table.query(
+        KeyConditionExpression=Key("user_id").eq(user_id),
+        FilterExpression=Attr("lang").eq(lang)
+    )
+    items = [item["word"] for item in response.get("Items", [])]
+    return items
+
+def get_word(user_id: str, lang: str, word: str):
+    response = table.query(
+        KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word),
+        FilterExpression=Attr("lang").eq(lang)
+    )
+
+    items = response.get("Items", [])
+    if not items:
+        raise HTTPException(status_code=404, detail="Word not found")
+
+    item = items[0]
+    word_result = WordResult(
+        word=item["word"],
+        language=item["lang"],
+        translation=item["translation"],
+        definition=item["definition"],
+        examples=item["examples"]
+    )
+    return word_result
+
 def purge_words(user_id: str, lang: str):
     response = table.query(
         KeyConditionExpression=Key("user_id").eq(user_id),

@@ -26,10 +26,19 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={"detail": exc.detail},
     )
 
+@app.get("/words", response_model=WordList)
+async def get_words():
+    user_id = "test"
+    lang = 'IT'
+    words = db_service.get_words(user_id, lang)
+    return words
 
-@app.get("/test")
-async def test():
-    return {"message": "Hello from FastAPI!"}
+@app.get("/word/{word}", response_model=WordResult)
+async def get_word(lang: str, word: str):
+    user_id = "test"
+    lang = 'IT'
+    word_result = db_service.get_word(user_id, lang, word)
+    return word_result
 
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
