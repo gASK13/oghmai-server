@@ -172,12 +172,12 @@ resource "aws_api_gateway_resource" "resources" {
 resource "aws_api_gateway_method" "methods" {
   for_each = {
     for ep in local.endpoints :
-    "${ep.full_path}_${ep.http_method}" => ep
+    "${ep.full_path}_${ep.method}" => ep
   }
 
   rest_api_id      = aws_api_gateway_rest_api.oghmai_api.id
   resource_id      = aws_api_gateway_resource.resources[each.value.full_path].id
-  http_method      = each.value.http_method
+  http_method      = each.value.method
   authorization    = "NONE"
   api_key_required = each.value.api_key_required
 }
