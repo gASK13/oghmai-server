@@ -1,13 +1,31 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from mangum import Mangum
 import boto3
 from models import *
 import bedrock_service
 import db_service
+import logging
 
 app = FastAPI()
 handler = Mangum(app)
 client = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.exception(f"Unhandled exception at {request.method} {request.url.path}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)},
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
 
 @app.get("/test")
 async def test():
@@ -15,14 +33,8 @@ async def test():
 
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
-    try:
-        result = bedrock_service.describe_word(req.description)
-        return result
-
-    except Exception as e:
-        print(f"Error during describe_word: {e}")
-        # print stacktrace
-        raise HTTPException(status_code=500, detail=str(e))
+    result = bedrock_service.describe_word(req.description)
+    return result
 
 @app.post("/save-word")
 async def save_word(word_result: WordResult):
