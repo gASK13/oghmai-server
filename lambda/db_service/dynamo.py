@@ -3,10 +3,31 @@ from botocore.exceptions import ClientError
 from models import WordResult
 import os
 from fastapi import HTTPException
+from boto3.dynamodb.conditions import Key, Attr
 
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table_name = os.getenv("DYNAMODB_TABLE", "oghmai_vocabulary_words")
 table = dynamodb.Table(table_name)
+
+def purge_words(user_id: str, lang: str):
+    response = table.query(
+        KeyConditionExpression=Key("user_id").eq(user_id),
+        FilterExpression=Attr("lang").eq(lang)
+    )
+
+    items_to_delete = response.get("Items", [])
+
+    # Step 2: Batch delete items
+    with table.batch_writer() as batch:
+        for item in items_to_delete:
+            batch.delete_item(
+                Key={
+                    "user_id": item["user_id"],
+                    "word": item["word"]
+                }
+            )
+
+    return {"deleted": len(items_to_delete)}
 
 def save_word(user_id: str, word_result: WordResult):
     try:

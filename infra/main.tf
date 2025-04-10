@@ -31,6 +31,11 @@ locals {
       path_part        = "save-word"
       api_key_required = true
     }
+    words = {
+      method           = "DELETE"
+      path_part        = "words"
+      api_key_required = true
+    }
   }
 }
 
@@ -101,7 +106,7 @@ resource "aws_dynamodb_table" "vocabulary" {
 # Lambda Function
 #############################
 data "archive_file" "lambda_zip" {
-  type = "zip"
+  type        = "zip"
   source_dir  = "../lambda"
   output_path = "lambda.zip"
 }

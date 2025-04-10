@@ -41,3 +41,9 @@ async def save_word(word_result: WordResult):
     user_id = "test"  # For now hardcoded
     result = db_service.save_word(user_id, word_result)
     return result
+
+@app.delete("/words")
+async def delete_words():
+    user_id = "test"  # For now hardcoded
+    words = db_service.purge_words(user_id, 'IT')
+    return words
