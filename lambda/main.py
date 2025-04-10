@@ -31,7 +31,7 @@ async def get_words():
     user_id = "test"
     lang = 'IT'
     words = db_service.get_words(user_id, lang)
-    return words
+    return WordList(words=words)
 
 @app.get("/word/{word}", response_model=WordResult)
 async def get_word(lang: str, word: str):
