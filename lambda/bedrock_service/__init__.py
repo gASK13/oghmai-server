@@ -1,3 +1,3 @@
-from .bedrock import bedrock_describe_word
+from .bedrock import describe_word
 
-__all__ = ['bedrock_describe_word']
+__all__ = ['describe_word']

@@ -8,3 +8,4 @@ class WordResult(BaseModel):
     translation: str
     definition: str
     examples: list[str]
+    language: str = "IT"  # Default to IT for now

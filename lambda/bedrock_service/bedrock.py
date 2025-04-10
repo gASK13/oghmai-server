@@ -15,7 +15,7 @@ def load_prompt_template(name: str) -> str:
         return f.read()
 
 
-def bedrock_describe_word(definition: str) -> WordResult:
+def describe_word(definition: str) -> WordResult:
     prompt = load_prompt_template("describe_word").format(definition=definition)
     for attempt in range(1, MAX_RETRIES + 1):
         try:
