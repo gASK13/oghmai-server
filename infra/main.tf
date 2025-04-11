@@ -1,6 +1,5 @@
 provider "aws" {
-  region  = "us-east-1" # Change as needed
-  profile = "oghmai"
+  region = "us-east-1" # Change as needed
 }
 
 terraform {
@@ -9,7 +8,6 @@ terraform {
     key     = "env/dev/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true
-    profile = "oghmai"
   }
 }
 
