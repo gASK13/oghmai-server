@@ -34,14 +34,14 @@ async def get_words():
     return WordList(words=words)
 
 @app.get("/word/{word}", response_model=WordResult)
-async def get_word(lang: str, word: str):
+async def get_word(word: str):
     user_id = "test"
     lang = 'IT'
     word_result = db_service.get_word(user_id, lang, word)
     return word_result
 
 @app.delete("/word/{word}")
-async def get_word(lang: str, word: str):
+async def get_word(word: str):
     user_id = "test"
     lang = 'IT'
     return db_service.delete_word(user_id, lang, word)
