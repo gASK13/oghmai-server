@@ -178,3 +178,5 @@ cython_debug/
 .terraform
 .terraform.lock.hcl
 infra/*.zip
+
+layers/

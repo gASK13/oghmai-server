@@ -30,6 +30,22 @@ AI: Bedrock (later ChatGPT API or something else)
 IaC: Terraform
 Security: API Key Auth + Usage Plans (AWS API Gateway)
 
+## How to build (and run) locally
+Assuming you have Python 3.10+, all packages needed, Terraform and AWS credentials setup.
+
+1. Run FastAPI locally using uvicorn:
+```bash
+uvicorn lambda.main:app --reload
+```
+
+Now test the API using Postman or curl
+
+For remote deployment, there is a CI/CD pipeline, you just need to setup your AWS credentials properly.
+
+If you want to deploy to AWS from local (or test changes), you need to:
+1. Run local.bat to produce necessary files (OpenAPI + layer)
+2. Run terraform apply to deploy the changes to AWS (make sure to setup proper profile for AWS)
+ 
 ## MVP Modes Breakdown (Phase 1)
 ### Mode 1: “Sto cercando una parola…”
 _(User describes meaning, AI suggests target-language word)_
@@ -45,7 +61,7 @@ With definition + example in Italian only
 
 **Buttons:** “Salva” / “Non salvare”
 
-**API endpoint:** POST /find-word
+**API endpoint:** POST /describe-word
 
 **Bedrock prompt example:**
 "L'utente sta cercando una parola italiana che descrive: 'Quando una persona ha paura di stare con altra gente.' Suggerisci la parola più adatta, la definizione e una frase d'esempio, tutto in italiano."
@@ -78,18 +94,12 @@ List: Words + short preview of definition
 Tap word: See full entry (definition + example)
 Option: “Fai una domanda su questa parola” (uses AI to answer, e.g. grammar, usage, synonyms)
 **API endpoints:**
-- GET /my-words
+- GET /words
 - POST /ask-about-word (user asks a question, AI answers in Italian)
 
-## MVP Summary of Endpoints
-### POST /find-word	
-Suggest word from description (AI)
-### POST /add-known-word	
-Save a word with AI-generated info
-### GET /my-words	
-Get all saved words
-### POST /ask-about-word	
-Ask something about a saved word (AI)
+## Summary of Endpoints
+
+Endpoints can be found in FastAPI - everything is generated based on that and growing, so no need to keep them here
 
 ## Database Schema (DynamoDB)
 Table: vocab_words
@@ -98,9 +108,11 @@ Sort Key: word
 Other fields:
 
 definition (Italian)
+lanuage (IT for now)
 example_sentence (Italian)
-date_added
-Optionally source: "ai-suggested" / "user-input"
+translation (English)
+
+In future we can add source, date added and other metadata.
 
 ## UI Screens MVP
 “Cerca parola” screen – input, result + Save/Not Save
@@ -111,9 +123,9 @@ Optionally source: "ai-suggested" / "user-input"
 
 ## MVP Next Steps
 - [x] Set up Terraform base (Lambda, API Gateway, Dynamo)
-- [ ] Build and test FastAPI backend locally
-- [ ] Integrate Bedrock for Italian prompts
-- [ ] Connect Android client to backend
+- [x] Build and test FastAPI backend locally
+- [x] Integrate Bedrock for Italian prompts
+- [x] Connect Android client to backend
 - [ ] Basic UI for all 3 modes
 - [ ] Deploy MVP to AWS and test live
 

@@ -12,29 +12,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.11'
+
       - name: Install dependencies for the layer
         run: |
           mkdir -p layers/oghmai_layer/python
           pip install -r lambda/requirements.txt -t layers/oghmai_layer/python
           cd layers/oghmai_layer && zip -r ../oghmai_layer.zip python/*
+
+      - name: Generate OpenAPI schema
+        run: |
+          python lambda/openapi.py
+          mv openapi.yaml infra/
+
       - uses: aws-actions/configure-aws-credentials@v2
         name: Setup AWS Credentials
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+
       - name: Terraform Init
         run: terraform init
         working-directory: infra
+
       - name: Terraform Validate
         run: terraform validate
         working-directory: infra
+
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: infra
