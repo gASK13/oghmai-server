@@ -20,7 +20,7 @@ def get_words(user_id: str, lang: str):
 
 def get_word(user_id: str, lang: str, word: str):
     response = table.query(
-        KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word),
+        KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word.lower()),
         FilterExpression=Attr("lang").eq(lang)
     )
 
@@ -43,7 +43,7 @@ def delete_word(user_id: str, lang: str, word: str):
         response = table.delete_item(
             Key={
                 "user_id": user_id,
-                "word": word
+                "word": word.lower()
             },
             ConditionExpression=Attr("lang").eq(lang)
         )
@@ -80,7 +80,7 @@ def save_word(user_id: str, word_result: WordResult):
         table.put_item(
             Item={
                 "user_id": user_id,
-                "word": word_result.word,
+                "word": word_result.word.lower(),
                 "lang": word_result.language,
                 "translation": word_result.translation,
                 "definition": word_result.definition,
