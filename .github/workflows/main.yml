@@ -26,6 +26,7 @@ jobs:
 
       - name: Generate OpenAPI schema
         run: |
+          export PYTHONPATH=layers/oghmai_layer/python
           python lambda/openapi.py
           mv openapi.yaml infra/
 
