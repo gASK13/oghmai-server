@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-1" # Change as needed
+  region  = "us-east-1" # Change as needed
+  profile = "oghmai"
 }
 
 terraform {
@@ -8,48 +9,9 @@ terraform {
     key     = "env/dev/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true
+    profile = "oghmai"
   }
 }
-
-##############################
-# Endpoint definitions
-##############################
-locals {
-  endpoints = {
-    list_words = {
-      method           = "GET"
-      path_part        = "words"
-      api_key_required = true
-    }
-    get_word = {
-      method           = "GET"
-      path_part        = "word"
-      api_key_required = true
-    }
-    delete_word = {
-      method           = "DELETE"
-      path_part        = "word"
-      api_key_required = true
-    }
-    describe_word = {
-      method           = "POST"
-      path_part        = "describe-word"
-      api_key_required = true
-    }
-    save_word = {
-      method           = "POST"
-      path_part        = "save-word"
-      api_key_required = true
-    }
-    words = {
-      method           = "DELETE"
-      path_part        = "words"
-      api_key_required = true
-    }
-  }
-  unique_paths = distinct([for ep in local.endpoints : ep.path_part])
-}
-
 
 #############################
 # IAM Role for Lambda
@@ -152,32 +114,9 @@ resource "aws_lambda_function" "api_handler" {
 resource "aws_api_gateway_rest_api" "oghmai_api" {
   name        = "oghmai-vocab-rest-api"
   description = "OghmAI REST API for vocabulary app"
-}
-
-resource "aws_api_gateway_resource" "paths" {
-  for_each    = toset(local.unique_paths)
-  rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
-  parent_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
-  path_part   = each.key
-}
-
-resource "aws_api_gateway_method" "methods" {
-  for_each         = local.endpoints
-  rest_api_id      = aws_api_gateway_rest_api.oghmai_api.id
-  resource_id      = aws_api_gateway_resource.paths[each.value.path_part].id
-  http_method      = each.value.method
-  authorization    = "NONE"
-  api_key_required = each.value.api_key_required
-}
-
-resource "aws_api_gateway_integration" "integrations" {
-  for_each                = aws_api_gateway_method.methods
-  rest_api_id             = each.value.rest_api_id
-  resource_id             = each.value.resource_id
-  http_method             = each.value.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.api_handler.invoke_arn
+  body = templatefile("openapi.yaml", {
+    lambda_arn = aws_lambda_function.api_handler.arn
+  })
 }
 
 # Lambda permission for API Gateway
@@ -197,7 +136,7 @@ resource "aws_api_gateway_stage" "oghmai_stage" {
 
 # Deployment
 resource "aws_api_gateway_deployment" "oghmai_deployment" {
-  depends_on  = [aws_api_gateway_integration.integrations]
+  depends_on  = [aws_api_gateway_rest_api.oghmai_api]
   rest_api_id = aws_api_gateway_rest_api.oghmai_api.id
 
   lifecycle {
