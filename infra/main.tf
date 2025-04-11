@@ -113,7 +113,7 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
   name        = "oghmai-vocab-rest-api"
   description = "OghmAI REST API for vocabulary app"
   body = templatefile("openapi.yaml", {
-    lambda_arn = aws_lambda_function.api_handler.arn
+    lambda_arn = aws_lambda_function.api_handler.invoke_arn
   })
 }
 
