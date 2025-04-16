@@ -94,11 +94,6 @@ resource "aws_dynamodb_table" "recycle_bin" {
     type = "S"
   }
 
-  attribute {
-    name = "ttl"
-    type = "N"
-  }
-
   ttl {
     attribute_name = "ttl"
     enabled        = true
