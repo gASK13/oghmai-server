@@ -68,7 +68,7 @@ async def patch_word(word: str, action: str):
 
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
-    result = bedrock_service.describe_word(req.description)
+    result = bedrock_service.describe_word(req.description, req.exclusions)
     return result
 
 @app.post("/save-word")

@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class DescriptionRequest(BaseModel):
     description: str
+    exclusions: list[str] = None
 
 class WordResult(BaseModel):
     word: str

@@ -15,8 +15,14 @@ def load_prompt_template(name: str) -> str:
         return f.read()
 
 
-def describe_word(definition: str) -> WordResult:
-    prompt = load_prompt_template("describe_word").format(definition=definition)
+def describe_word(definition: str, exclusions: list[str]) -> WordResult:
+    if not exclusions:
+        prompt = load_prompt_template("describe_word").format(definition=definition)
+    else:
+        prompt = load_prompt_template("describe_word_exclusions").format(
+            definition=definition,
+            exclusions=", ".join(exclusions)
+        )
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             print(f'Prompt: {prompt}')
