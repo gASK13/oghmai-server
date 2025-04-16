@@ -57,6 +57,15 @@ async def get_word(word: str):
     lang = 'IT'
     return db_service.delete_word(user_id, lang, word)
 
+@app.patch("/word/{word}")
+async def patch_word(word: str, action: str):
+    user_id = "test"  # Hardcoded for now
+    lang = 'IT'
+    if action == "undelete":
+        return db_service.undelete_word(user_id, lang, word)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
     result = bedrock_service.describe_word(req.description)

@@ -74,6 +74,38 @@ resource "aws_dynamodb_table" "vocabulary" {
 }
 
 #############################
+# DynamoDB Recycle Bin Table
+#############################
+resource "aws_dynamodb_table" "recycle_bin" {
+  name           = "oghmai_vocabulary_recycle_bin"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "user_id"
+  range_key      = "word"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "word"
+    type = "S"
+  }
+
+  attribute {
+    name = "ttl"
+    type = "N"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+}
+
+#############################
 # Lambda Function
 #############################
 data "archive_file" "lambda_zip" {
