@@ -6,10 +6,21 @@ from models import *
 import bedrock_service
 import db_service
 import logging
+import time
 
 app = FastAPI()
 handler = Mangum(app)
 client = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    logging.info(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    logging.info(
+        f"Completed request: {request.method} {request.url} in {process_time:.2f}s with status {response.status_code}")
+    return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
