@@ -49,6 +49,8 @@ async def get_word(word: str):
     user_id = "test"
     lang = 'IT'
     word_result = db_service.get_word(user_id, lang, word)
+    if word_result is None:
+        raise HTTPException(status_code=404, detail=f"Word {word} not found")
     return word_result
 
 @app.delete("/word/{word}")
@@ -68,7 +70,9 @@ async def patch_word(word: str, action: str):
 
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest):
+    user_id = "test"  # For now hardcoded
     result = bedrock_service.describe_word(req.description, req.exclusions)
+    result.saved = db_service.get_word(user_id, result.language, result.word) is not None
     return result
 
 @app.post("/save-word")

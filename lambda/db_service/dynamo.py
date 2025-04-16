@@ -27,7 +27,7 @@ def get_word(user_id: str, lang: str, word: str):
 
     items = response.get("Items", [])
     if not items:
-        raise HTTPException(status_code=404, detail="Word not found")
+        return None
 
     item = items[0]
     word_result = WordResult(
@@ -35,7 +35,8 @@ def get_word(user_id: str, lang: str, word: str):
         language=item["lang"],
         translation=item["translation"],
         definition=item["definition"],
-        examples=item["examples"]
+        examples=item["examples"],
+        saved=True
     )
     return word_result
 

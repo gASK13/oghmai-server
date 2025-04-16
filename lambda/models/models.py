@@ -9,6 +9,7 @@ class WordResult(BaseModel):
     translation: str
     definition: str
     examples: list[str]
+    saved: bool = False
     language: str = "IT"  # Default to IT for now
 
 class WordList(BaseModel):
