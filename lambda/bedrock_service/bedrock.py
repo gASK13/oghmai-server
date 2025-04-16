@@ -15,7 +15,7 @@ def load_prompt_template(name: str) -> str:
         return f.read()
 
 
-def describe_word(definition: str, exclusions: list[str]) -> WordResult:
+def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     if not exclusions:
         prompt = load_prompt_template("describe_word").format(definition=definition)
     else:
@@ -30,15 +30,15 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult:
             print(f'Raw output: {raw_output}')
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
             print(f'Parsed output: {parsed}')
-            if (exclusions is not None and parsed["word"] in exclusions):
+            if exclusions is not None and parsed["word"] in exclusions:
                 print(f"[Attempt {attempt}] Exclusion word found in response. Retrying...")
                 continue
             return WordResult(**parsed)
 
         except json.JSONDecodeError as e:
             print(f"[Attempt {attempt}] Invalid response: {e}")
-            if attempt == MAX_RETRIES:
-                raise RuntimeError("Failed to get a valid response from Bedrock after multiple attempts.")
+
+    return None
 
 
 def call_bedrock(prompt: str, temperature=0.7, max_tokens=500):
