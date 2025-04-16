@@ -30,6 +30,9 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult:
             print(f'Raw output: {raw_output}')
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
             print(f'Parsed output: {parsed}')
+            if (exclusions is not None and parsed["word"] in exclusions):
+                print(f"[Attempt {attempt}] Exclusion word found in response. Retrying...")
+                continue
             return WordResult(**parsed)
 
         except json.JSONDecodeError as e:
