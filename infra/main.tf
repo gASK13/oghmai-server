@@ -198,7 +198,7 @@ resource "aws_api_gateway_usage_plan" "oghmai_usage_plan" {
 
   quota_settings {
     limit  = 1000
-    period = "WEEK"
+    period = "DAY"
   }
 }
 
