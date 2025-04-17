@@ -12,10 +12,7 @@ import sys
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,  # Set the logging level (e.g., DEBUG, INFO, WARNING, ERROR)
-    format="%(asctime)s - %(levelname)s - %(message)s",  # Log format
-    handlers=[
-        logging.StreamHandler(sys.stdout)  # Output logs to console (stdout)
-    ]
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
 # FASTAPI app and AWS Lambda handler
@@ -26,10 +23,10 @@ client = boto3.client("bedrock-runtime", region_name="us-east-1")
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
-    logging.info(f"Incoming request: {request.method} {request.url}")
+    logging.getLogger(__name__).info(f"Incoming request: {request.method} {request.url}")
     response = await call_next(request)
     process_time = time.time() - start_time
-    logging.info(
+    logging.getLogger(__name__).info(
         f"Completed request: {request.method} {request.url} in {process_time:.2f}s with status {response.status_code}")
     return response
 
@@ -84,7 +81,7 @@ async def describe_word(req: DescriptionRequest):
     user_id = "test"  # For now hardcoded
     result = bedrock_service.describe_word(req.description, req.exclusions)
     if result is None:
-        return JSONResponse(status_code=204, content={"detail": "No content"})
+        return JSONResponse(status_code=204, content=None)
     result.saved = db_service.get_word(user_id, result.language, result.word) is not None
     return result
 
