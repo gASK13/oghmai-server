@@ -7,7 +7,18 @@ import bedrock_service
 import db_service
 import logging
 import time
+import sys
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set the logging level (e.g., DEBUG, INFO, WARNING, ERROR)
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Log format
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # Output logs to console (stdout)
+    ]
+)
+
+# FASTAPI app and AWS Lambda handler
 app = FastAPI()
 handler = Mangum(app)
 client = boto3.client("bedrock-runtime", region_name="us-east-1")
