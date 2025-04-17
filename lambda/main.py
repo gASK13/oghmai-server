@@ -73,7 +73,7 @@ async def describe_word(req: DescriptionRequest):
     user_id = "test"  # For now hardcoded
     result = bedrock_service.describe_word(req.description, req.exclusions)
     if result is None:
-        return JSONResponse(status_code=204)
+        return JSONResponse(status_code=204, content={"detail": "No content"})
     result.saved = db_service.get_word(user_id, result.language, result.word) is not None
     return result
 
