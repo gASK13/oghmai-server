@@ -5,15 +5,7 @@ import boto3
 from models import *
 import bedrock_service
 import db_service
-import logging
 import time
-import sys
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level (e.g., DEBUG, INFO, WARNING, ERROR)
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
 
 # FASTAPI app and AWS Lambda handler
 app = FastAPI()
@@ -23,16 +15,16 @@ client = boto3.client("bedrock-runtime", region_name="us-east-1")
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
-    logging.getLogger(__name__).info(f"Incoming request: {request.method} {request.url}")
+    print(f"Incoming request: {request.method} {request.url}")
     response = await call_next(request)
     process_time = time.time() - start_time
-    logging.getLogger(__name__).info(
+    print(
         f"Completed request: {request.method} {request.url} in {process_time:.2f}s with status {response.status_code}")
     return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logging.exception(f"Unhandled exception at {request.method} {request.url.path}")
+    print(f"Unhandled exception at {request.method} {request.url.path}")
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error", "error": str(exc)},

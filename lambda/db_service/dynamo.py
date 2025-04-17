@@ -1,6 +1,5 @@
 import boto3
 from botocore.exceptions import ClientError
-import logging
 from models import WordResult
 import os
 from fastapi import HTTPException
@@ -71,7 +70,7 @@ def delete_word(user_id: str, lang: str, word: str):
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             raise HTTPException(status_code=404, detail="Word not found.")
         else:
-            logging.exception("Error deleting word")
+            print("Error deleting word")
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
 def undelete_word(user_id: str, lang: str, word: str):
@@ -107,7 +106,7 @@ def undelete_word(user_id: str, lang: str, word: str):
         )
         return {"status": "ok", "message": f"Word '{word}' restored for user '{user_id}'"}
     except ClientError as e:
-        logging.exception("Error restoring word")
+        print("Error restoring word")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 def purge_words(user_id: str, lang: str):

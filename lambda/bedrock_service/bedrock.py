@@ -2,7 +2,6 @@ import boto3
 import os
 import json
 from models import WordResult
-import logging
 
 # Optional: store model ID in env vars or config
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
@@ -26,18 +25,18 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
         )
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            logging.debug(f'Prompt: {prompt}')
+            print(f'Prompt: {prompt}')
             raw_output = call_bedrock(prompt)
-            logging.debug(f'Raw output: {raw_output}')
+            print(f'Raw output: {raw_output}')
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
-            logging.debug(f'Parsed output: {parsed}')
+            print(f'Parsed output: {parsed}')
             if exclusions is not None and parsed["word"] in exclusions:
-                logging.debug(f"[Attempt {attempt}] Exclusion word found in response. Retrying...")
+                print(f"[Attempt {attempt}] Exclusion word found in response. Retrying...")
                 continue
             return WordResult(**parsed)
 
         except json.JSONDecodeError as e:
-            logging.warn(f"[Attempt {attempt}] Invalid response: {e}")
+            print(f"[Attempt {attempt}] Invalid response: {e}")
 
     return None
 
