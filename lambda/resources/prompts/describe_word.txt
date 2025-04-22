@@ -3,7 +3,7 @@ Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizio
 1. La parola che più probabilmente corrisponde alla descrizione in Italiano
 2. La traduzione in inglese della parola.
 3. Una definizione molto breve della parola in Italiano.
-4. Tre frasi in Italiano di esempio che utilizzano la parola in contesti diversi, utilizzando forme e tempi verbali diversi ove possibile.
+4. Tre frasi in Italiano di esempio che utilizzano la parola in contesti diversi, utilizzando la parola spiegata in pluare e singolare e tempi verbali diversi.
 
 Struttura l"output in questo modo:
 {{
