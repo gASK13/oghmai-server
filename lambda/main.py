@@ -6,6 +6,7 @@ from models import *
 import bedrock_service
 import db_service
 import time
+from utils import logging
 
 # FASTAPI app and AWS Lambda handler
 app = FastAPI()
@@ -14,17 +15,44 @@ client = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    # Generate a request ID for tracking
+    request_id = logging.set_request_id()
+
+    # Log the incoming request
     start_time = time.time()
-    print(f"Incoming request: {request.method} {request.url}")
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    print(
-        f"Completed request: {request.method} {request.url} in {process_time:.2f}s with status {response.status_code}")
-    return response
+    logging.info(f"Incoming request: {request.method} {request.url}", {
+        "method": request.method,
+        "path": str(request.url),
+        "client_host": request.client.host if request.client else None,
+    })
+
+    try:
+        # Process the request
+        response = await call_next(request)
+
+        # Log the completed request
+        process_time = time.time() - start_time
+        logging.info(f"Completed request: {request.method} {request.url}", {
+            "method": request.method,
+            "path": str(request.url),
+            "status_code": response.status_code,
+            "duration_ms": round(process_time * 1000),
+        })
+
+        return response
+    finally:
+        # Clear the request ID after the request is complete
+        logging.clear_request_id()
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"Unhandled exception at {request.method} {request.url.path}")
+    # Log the exception with full details
+    logging.exception(f"Unhandled exception at {request.method} {request.url.path}", {
+        "method": request.method,
+        "path": str(request.url.path),
+        "exception_type": type(exc).__name__,
+    })
+
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal Server Error", "error": str(exc)},
