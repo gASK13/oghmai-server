@@ -54,9 +54,9 @@ def get_word(user_id: str, lang: str, word: str):
             translation=item["translation"],
             definition=item["definition"],
             examples=item["examples"],
-            createdAt=item["created_at"],
+            createdAt=datetime.fromtimestamp(item["created_at"]),
             status=item["status"],
-            lastTest=item["last_test"],
+            lastTest=datetime.fromtimestamp(item["last_test"]) if item.get("last_test") else None,
             testResults=item["test_results"]
         )
 
@@ -181,7 +181,7 @@ def save_word(user_id: str, word_result: WordResult):
                 "translation": word_result.translation,
                 "definition": word_result.definition,
                 "examples": word_result.examples,
-                "created_at": datetime.now(),
+                "created_at": int(datetime.now().timestamp()),
                 "status": StatusEnum.NEW,
                 "last_test": None,
                 "test_results": [],
