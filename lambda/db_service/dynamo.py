@@ -18,12 +18,6 @@ def get_words(user_id: str, lang: str):
     })
 
     try:
-        logging.debug(f"Querying DynamoDB for words", {
-            "user_id": user_id,
-            "lang": lang,
-            "table": table_name
-        })
-
         response = table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
             FilterExpression=Attr("lang").eq(lang)
@@ -53,13 +47,6 @@ def get_word(user_id: str, lang: str, word: str):
     })
 
     try:
-        logging.debug(f"Querying DynamoDB for word", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "table": table_name
-        })
-
         response = table.query(
             KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word.lower()),
             FilterExpression=Attr("lang").eq(lang)
@@ -81,7 +68,10 @@ def get_word(user_id: str, lang: str, word: str):
             translation=item["translation"],
             definition=item["definition"],
             examples=item["examples"],
-            saved=True
+            createdAt=item["created_at"],
+            status=item["status"],
+            lastTest=item["last_test"],
+            testResults=item["test_results"]
         )
 
         logging.info(f"Word found", {
@@ -128,22 +118,7 @@ def delete_word(user_id: str, lang: str, word: str):
         item = items[0]
         item["ttl"] = ttl
 
-        logging.debug(f"Moving word to recycle bin", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "ttl": ttl
-        })
-
         recycle_bin_table.put_item(Item=item)  # Overwrites if the same word exists
-
-        # Delete the item from the main table
-        logging.debug(f"Deleting word from main table", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "table": table_name
-        })
 
         table.delete_item(
             Key={
@@ -190,12 +165,6 @@ def undelete_word(user_id: str, lang: str, word: str):
         # Fetch the item from the recycle bin
         recycle_bin_table = dynamodb.Table("oghmai_vocabulary_recycle_bin")
 
-        logging.debug(f"Querying recycle bin for word", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word
-        })
-
         response = recycle_bin_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word.lower()),
             FilterExpression=Attr("lang").eq(lang)
@@ -208,14 +177,6 @@ def undelete_word(user_id: str, lang: str, word: str):
                 "word": word
             })
             raise HTTPException(status_code=404, detail="Word not found in recycle bin")
-
-        # Check if the word already exists in the main table
-        logging.debug(f"Checking if word already exists in main table", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "table": table_name
-        })
 
         main_table_response = table.query(
             KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word.lower()),
@@ -231,23 +192,7 @@ def undelete_word(user_id: str, lang: str, word: str):
 
         # Restore the item to the main table
         item = items[0]
-
-        logging.debug(f"Restoring word to main table", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "table": table_name
-        })
-
         table.put_item(Item=item)
-
-        # Delete the item from the recycle bin
-        logging.debug(f"Removing word from recycle bin", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word
-        })
-
         recycle_bin_table.delete_item(
             Key={
                 "user_id": user_id,
@@ -277,12 +222,6 @@ def purge_words(user_id: str, lang: str):
         "lang": lang
     })
 
-    logging.debug(f"Querying words to purge", {
-        "user_id": user_id,
-        "lang": lang,
-        "table": table_name
-    })
-
     response = table.query(
         KeyConditionExpression=Key("user_id").eq(user_id),
         FilterExpression=Attr("lang").eq(lang)
@@ -298,12 +237,6 @@ def purge_words(user_id: str, lang: str):
 
     # Step 2: Batch delete items
     try:
-        logging.debug(f"Starting batch delete operation", {
-            "user_id": user_id,
-            "lang": lang,
-            "count": len(items_to_delete)
-        })
-
         with table.batch_writer() as batch:
             for item in items_to_delete:
                 batch.delete_item(
@@ -337,13 +270,6 @@ def save_word(user_id: str, word_result: WordResult):
     })
 
     try:
-        logging.debug(f"Putting item in DynamoDB", {
-            "user_id": user_id,
-            "word": word_result.word,
-            "lang": word_result.language,
-            "table": table_name
-        })
-
         table.put_item(
             Item={
                 "user_id": user_id,
@@ -352,6 +278,10 @@ def save_word(user_id: str, word_result: WordResult):
                 "translation": word_result.translation,
                 "definition": word_result.definition,
                 "examples": word_result.examples,
+                "created_at": int(time.time()),
+                "status": "NEW",
+                "last_test": None,
+                "test_results": [],
             },
             ConditionExpression="attribute_not_exists(user_id) AND attribute_not_exists(word) AND attribute_not_exists(lang)"
         )

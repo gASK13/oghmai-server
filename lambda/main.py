@@ -102,7 +102,8 @@ async def describe_word(req: DescriptionRequest):
     result = bedrock_service.describe_word(req.description, req.exclusions)
     if result is None:
         return JSONResponse(status_code=204, content=None)
-    result.saved = db_service.get_word(user_id, result.language, result.word) is not None
+    existing_word = db_service.get_word(user_id, result.language, result.word)
+    result.status = existing_word.status if existing_word else "UNSAVED"
     return result
 
 @app.post("/save-word")
