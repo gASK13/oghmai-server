@@ -1,6 +1,6 @@
 import boto3
 from botocore.exceptions import ClientError
-from models import WordResult
+from models import WordResult, StatusEnum
 import os
 from fastapi import HTTPException
 from boto3.dynamodb.conditions import Key, Attr
@@ -279,7 +279,7 @@ def save_word(user_id: str, word_result: WordResult):
                 "definition": word_result.definition,
                 "examples": word_result.examples,
                 "created_at": int(time.time()),
-                "status": "NEW",
+                "status": StatusEnum.NEW,
                 "last_test": None,
                 "test_results": [],
             },
