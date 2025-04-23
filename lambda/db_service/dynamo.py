@@ -12,10 +12,7 @@ table_name = os.getenv("DYNAMODB_TABLE", "oghmai_vocabulary_words")
 table = dynamodb.Table(table_name)
 
 def get_words(user_id: str, lang: str):
-    logging.info(f"Getting all words for user", {
-        "user_id": user_id,
-        "lang": lang
-    })
+    logging.info(f"Getting all words for user {user_id} @ {lang}")
 
     try:
         response = table.query(
@@ -24,11 +21,7 @@ def get_words(user_id: str, lang: str):
         )
         items = [item["word"] for item in response.get("Items", [])]
 
-        logging.info(f"Retrieved words for user", {
-            "user_id": user_id,
-            "lang": lang,
-            "count": len(items)
-        })
+        logging.info(f"Retrieved words for user {user_id} @ {lang} - {len(items)}")
 
         return items
     except Exception as e:
@@ -40,11 +33,7 @@ def get_words(user_id: str, lang: str):
         raise HTTPException(status_code=500, detail="Error retrieving words")
 
 def get_word(user_id: str, lang: str, word: str):
-    logging.info(f"Getting word details", {
-        "user_id": user_id,
-        "lang": lang,
-        "word": word
-    })
+    logging.info(f"Getting word details {user_id} @ {lang} - {word}")
 
     try:
         response = table.query(
@@ -54,11 +43,7 @@ def get_word(user_id: str, lang: str, word: str):
 
         items = response.get("Items", [])
         if not items:
-            logging.info(f"Word not found", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word
-            })
+            logging.info(f"Word {word} not found")
             return None
 
         item = items[0]
@@ -74,28 +59,13 @@ def get_word(user_id: str, lang: str, word: str):
             testResults=item["test_results"]
         )
 
-        logging.info(f"Word found", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word
-        })
-
         return word_result
     except Exception as e:
-        logging.error(f"Error retrieving word", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "error_message": str(e)
-        })
+        logging.error(f"Error retrieving word: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving word")
 
 def delete_word(user_id: str, lang: str, word: str):
-    logging.info(f"Deleting word", {
-        "user_id": user_id,
-        "lang": lang,
-        "word": word
-    })
+    logging.info(f"Deleting word {user_id} @ {lang} - {word}")
 
     try:
         # Fetch the item before deleting
@@ -105,11 +75,7 @@ def delete_word(user_id: str, lang: str, word: str):
         )
         items = response.get("Items", [])
         if not items:
-            logging.warning(f"Word not found for deletion", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word
-            })
+            logging.warning(f"Word {word} not found for deletion")
             raise HTTPException(status_code=404, detail="Word not found")
 
         # Save the item to the recycle bin with TTL set to 1 hour
@@ -128,38 +94,17 @@ def delete_word(user_id: str, lang: str, word: str):
             ConditionExpression=Attr("lang").eq(lang)
         )
 
-        logging.info(f"Word deleted successfully", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word
-        })
-
         return {"status": "ok", "message": f"Word '{word}' deleted for user '{user_id}'"}
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            logging.warning(f"Conditional check failed when deleting word", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word,
-                "error_code": e.response["Error"]["Code"]
-            })
+            logging.warning(f"Conditional check failed when deleting word {e.response['Error']['Code']}")
             raise HTTPException(status_code=404, detail="Word not found.")
         else:
-            logging.error(f"Error deleting word", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word,
-                "error_code": e.response["Error"]["Code"] if "Error" in e.response else "Unknown",
-                "error_message": str(e)
-            })
+            logging.error(f"Error deleting word: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
 
 def undelete_word(user_id: str, lang: str, word: str):
-    logging.info(f"Undeleting word", {
-        "user_id": user_id,
-        "lang": lang,
-        "word": word
-    })
+    logging.info(f"Undeleting word {user_id} @ {lang} - {word}")
 
     try:
         # Fetch the item from the recycle bin
@@ -171,11 +116,7 @@ def undelete_word(user_id: str, lang: str, word: str):
         )
         items = response.get("Items", [])
         if not items:
-            logging.warning(f"Word not found in recycle bin", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word
-            })
+            logging.warning(f"Word {word} not found in recycle bin")
             raise HTTPException(status_code=404, detail="Word not found in recycle bin")
 
         main_table_response = table.query(
@@ -183,11 +124,7 @@ def undelete_word(user_id: str, lang: str, word: str):
             FilterExpression=Attr("lang").eq(lang)
         )
         if main_table_response.get("Items"):
-            logging.warning(f"Word already exists in main table", {
-                "user_id": user_id,
-                "lang": lang,
-                "word": word
-            })
+            logging.warning(f"Word already exists in main table")
             raise HTTPException(status_code=409, detail="Word already exists in the main table")
 
         # Restore the item to the main table
@@ -200,27 +137,13 @@ def undelete_word(user_id: str, lang: str, word: str):
             }
         )
 
-        logging.info(f"Word restored successfully", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word
-        })
-
         return {"status": "ok", "message": f"Word '{word}' restored for user '{user_id}'"}
     except ClientError as e:
-        logging.error(f"Error restoring word", {
-            "user_id": user_id,
-            "lang": lang,
-            "word": word,
-            "error_message": str(e)
-        })
+        logging.error(f"Error restoring word: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 def purge_words(user_id: str, lang: str):
-    logging.info(f"Purging all words for user", {
-        "user_id": user_id,
-        "lang": lang
-    })
+    logging.info(f"Purging all words for user {user_id} @ {lang}")
 
     response = table.query(
         KeyConditionExpression=Key("user_id").eq(user_id),
@@ -228,12 +151,6 @@ def purge_words(user_id: str, lang: str):
     )
 
     items_to_delete = response.get("Items", [])
-
-    logging.info(f"Found words to purge", {
-        "user_id": user_id,
-        "lang": lang,
-        "count": len(items_to_delete)
-    })
 
     # Step 2: Batch delete items
     try:
@@ -246,28 +163,13 @@ def purge_words(user_id: str, lang: str):
                     }
                 )
 
-        logging.info(f"Successfully purged words", {
-            "user_id": user_id,
-            "lang": lang,
-            "count": len(items_to_delete)
-        })
-
         return {"deleted": len(items_to_delete)}
     except Exception as e:
-        logging.error(f"Error purging words", {
-            "user_id": user_id,
-            "lang": lang,
-            "count": len(items_to_delete),
-            "error_message": str(e)
-        })
+        logging.error(f"Error purging words: {str(e)}")
         raise HTTPException(status_code=500, detail="Error purging words")
 
 def save_word(user_id: str, word_result: WordResult):
-    logging.info(f"Saving word", {
-        "user_id": user_id,
-        "word": word_result.word,
-        "lang": word_result.language
-    })
+    logging.info(f"Saving word {user_id} @ {word_result.language} - {word_result.word}")
 
     try:
         table.put_item(
@@ -286,28 +188,11 @@ def save_word(user_id: str, word_result: WordResult):
             ConditionExpression="attribute_not_exists(user_id) AND attribute_not_exists(word) AND attribute_not_exists(lang)"
         )
 
-        logging.info(f"Word saved successfully", {
-            "user_id": user_id,
-            "word": word_result.word,
-            "lang": word_result.language
-        })
-
         return {"status": "ok", "message": f"Word '{word_result.word}' saved for user '{user_id}'"}
     except ClientError as e:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
-            logging.warning(f"Word already exists", {
-                "user_id": user_id,
-                "word": word_result.word,
-                "lang": word_result.language,
-                "error_code": e.response["Error"]["Code"]
-            })
+            logging.warning(f"Word already exists")
             raise HTTPException(status_code=409, detail="Word already exists for this user/language.")
         else:
-            logging.error(f"Error saving word", {
-                "user_id": user_id,
-                "word": word_result.word,
-                "lang": word_result.language,
-                "error_code": e.response["Error"]["Code"] if "Error" in e.response else "Unknown",
-                "error_message": str(e)
-            })
+            logging.error(f"Error saving word: {str(e)}")
             raise HTTPException(status_code=500, detail="Error saving word")

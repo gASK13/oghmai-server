@@ -20,11 +20,7 @@ async def log_requests(request: Request, call_next):
 
     # Log the incoming request
     start_time = time.time()
-    logging.info(f"Incoming request: {request.method} {request.url}", {
-        "method": request.method,
-        "path": str(request.url),
-        "client_host": request.client.host if request.client else None,
-    })
+    logging.info(f"Incoming request: {request.method} {request.url}")
 
     try:
         # Process the request
@@ -32,12 +28,7 @@ async def log_requests(request: Request, call_next):
 
         # Log the completed request
         process_time = time.time() - start_time
-        logging.info(f"Completed request: {request.method} {request.url}", {
-            "method": request.method,
-            "path": str(request.url),
-            "status_code": response.status_code,
-            "duration_ms": round(process_time * 1000),
-        })
+        logging.info(f"Completed request: {request.method} {request.url} with {response.status_code}")
 
         return response
     finally:
@@ -47,11 +38,7 @@ async def log_requests(request: Request, call_next):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     # Log the exception with full details
-    logging.exception(f"Unhandled exception at {request.method} {request.url.path}", {
-        "method": request.method,
-        "path": str(request.url.path),
-        "exception_type": type(exc).__name__,
-    })
+    logging.exception(f"Unhandled exception at {request.method} {request.url.path} - {str(exc)}")
 
     return JSONResponse(
         status_code=500,
