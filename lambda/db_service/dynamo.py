@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from boto3.dynamodb.conditions import Key, Attr
 import time
 from utils import logging
+from datetime import datetime
 
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table_name = os.getenv("DYNAMODB_TABLE", "oghmai_vocabulary_words")
@@ -180,7 +181,7 @@ def save_word(user_id: str, word_result: WordResult):
                 "translation": word_result.translation,
                 "definition": word_result.definition,
                 "examples": word_result.examples,
-                "created_at": int(time.time()),
+                "created_at": datetime.now(),
                 "status": StatusEnum.NEW,
                 "last_test": None,
                 "test_results": [],

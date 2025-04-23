@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
+from datetime import datetime
 
 class DescriptionRequest(BaseModel):
     description: str
@@ -19,9 +20,9 @@ class WordResult(BaseModel):
     definition: str
     examples: list[str]
     language: str = "IT"  # Default to IT for now
-    createdAt: Optional[int] = None
+    createdAt: Optional[datetime] = None
     status: StatusEnum = StatusEnum.UNSAVED
-    lastTest: Optional[int] = None
+    lastTest: Optional[datetime] = None
     testResults: Optional[list[bool]] = None
 
 class WordList(BaseModel):
