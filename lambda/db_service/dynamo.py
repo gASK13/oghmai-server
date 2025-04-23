@@ -54,9 +54,9 @@ def get_word(user_id: str, lang: str, word: str):
             translation=item["translation"],
             definition=item["definition"],
             examples=item["examples"],
-            createdAt=datetime.fromtimestamp(int(item["created_at"])).astimezone(),
+            createdAt=datetime.fromtimestamp(int(item["created_at"])).astimezone(timezone.utc),
             status=item["status"],
-            lastTest=datetime.fromtimestamp(int(item["last_test"])).astimezone() if item.get("last_test") else None,
+            lastTest=datetime.fromtimestamp(int(item["last_test"])).astimezone(timezone.utc) if item.get("last_test") else None,
             testResults=item["test_results"]
         )
 
