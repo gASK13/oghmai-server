@@ -256,7 +256,7 @@ def get_testable_words(user_id: str, lang: str, status_days: dict):
             combined_filter_expression |= expr
 
         # Query the table
-        response = table.query(
+        response = vocabulary_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
             FilterExpression=Attr("lang").eq(lang) & combined_filter_expression
         )
