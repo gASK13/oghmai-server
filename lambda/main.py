@@ -1,17 +1,16 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from mangum import Mangum
-import boto3
 from models import *
 import bedrock_service
 import db_service
 import time
 from utils import logging
+import challenge_service
 
 # FASTAPI app and AWS Lambda handler
 app = FastAPI()
 handler = Mangum(app)
-client = boto3.client("bedrock-runtime", region_name="us-east-1")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -28,7 +27,7 @@ async def log_requests(request: Request, call_next):
 
         # Log the completed request
         process_time = time.time() - start_time
-        logging.info(f"Completed request: {request.method} {request.url} with {response.status_code}")
+        logging.info(f"Completed request: {request.method} {request.url} with {response.status_code} in {process_time:.2f} seconds")
 
         return response
     finally:
@@ -51,6 +50,28 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
+
+@app.get("/test", response_model=TestStatistics)
+async def get_available_tests():
+    user_id = "test"
+    lang = 'IT'
+    return challenge_service.get_statistics(user_id, lang)
+
+
+@app.get("/test/next", response_model=TestChallenge)
+async def get_next_test():
+    user_id = "test"
+    lang = 'IT'
+    next_test = challenge_service.get_next_test(user_id, lang)
+    if next_test is None:
+        return JSONResponse(status_code=204, content=None)
+    return next_test
+
+
+@app.put("/test/{id}", response_model=TestResult)
+async def validate_test(id: str, guess: str):
+    user_id = "test"
+    return challenge_service.validate_test(user_id, id, guess)
 
 @app.get("/words", response_model=WordList)
 async def get_words():

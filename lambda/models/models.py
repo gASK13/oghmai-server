@@ -3,6 +3,10 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 
+class TestChallenge(BaseModel):
+    description: str
+    id: str
+
 class DescriptionRequest(BaseModel):
     description: str
     exclusions: list[str] = None
@@ -13,6 +17,33 @@ class StatusEnum(str, Enum):  # Define the Enum for status
     LEARNED = "LEARNED"
     KNOWN = "KNOWN"
     MASTERED = "MASTERED"
+
+    def raise_level(self):
+        levels = list(StatusEnum)
+        current_index = levels.index(self)
+        if current_index < len(levels) - 1:
+            return levels[current_index + 1]
+        return self  # Already at the highest level
+
+    def lower_level(self):
+        levels = list(StatusEnum)
+        current_index = levels.index(self)
+        if current_index > 1: #NEW is lowest
+            return levels[current_index - 1]
+        return self
+
+class ResultEnum(str, Enum):  # Define the Enum for result
+    INCORRECT = "INCORRECT"
+    CORRECT = "CORRECT"
+    PARTIAL = "PARTIAL"
+
+class TestResult(BaseModel):
+    result: ResultEnum
+    newStatus: StatusEnum
+    oldStatus: StatusEnum
+
+class TestStatistics(BaseModel):
+    available: dict[StatusEnum, int] = {s: 0 for s in StatusEnum}   # Map StatusEnum to integer counts
 
 class WordResult(BaseModel):
     word: str
