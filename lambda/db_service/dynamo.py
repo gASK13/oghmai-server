@@ -22,7 +22,7 @@ def get_words(user_id: str, lang: str):
     logging.info(f"Getting all words for user {user_id} @ {lang}")
 
     try:
-        response = table.query(
+        response = vocabulary_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
             FilterExpression=Attr("lang").eq(lang)
         )
@@ -43,7 +43,7 @@ def get_word(user_id: str, lang: str, word: str):
     logging.info(f"Getting word details {user_id} @ {lang} - {word}")
 
     try:
-        response = table.query(
+        response = vocabulary_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id) & Key("word").eq(word.lower()),
             FilterExpression=Attr("lang").eq(lang)
         )
