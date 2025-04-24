@@ -247,7 +247,7 @@ def get_testable_words(user_id: str, lang: str, status_days: dict):
         for status, days in status_days.items():
             last_test_threshold = current_time - (days * 86400)  # Convert days to seconds
             filter_expressions.append(
-                (Attr("status").eq(status) & Attr("last_test").lte(last_test_threshold))
+                (Attr("status").eq(status) & (Attr("last_test").eq(None) | Attr("last_test").lte(last_test_threshold)))
             )
 
         # Combine filter expressions with OR
