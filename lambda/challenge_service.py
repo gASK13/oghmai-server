@@ -38,7 +38,7 @@ def get_next_test(user_id: str, lang: str):
 
     # get from bedrock
     # TODO BEDROCK CALL
-    desc = f"Lorem Ipsum {word}"
+    desc = f"Lorem Ipsum - {word.word}"
 
     # store
     ch_id = db_service.store_challenge(user_id, word.language, desc, word.word)
