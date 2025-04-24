@@ -3,7 +3,7 @@ from datetime import datetime
 
 import db_service
 import bedrock_service
-from layers.oghmai_layer.python.fastapi import HTTPException
+from fastapi import HTTPException
 from models import *
 from utils import logging
 
