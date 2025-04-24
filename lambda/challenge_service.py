@@ -48,6 +48,7 @@ def get_next_test(user_id: str, lang: str):
 
 def validate_test(user_id: str, challenge_id: str, guess: str):
     logging.info(f"Validating test {challenge_id} for user {user_id}")
+    guess = guess.strip().lower()
     # get challenge
     challenge, lang = db_service.load_challenge_result(user_id, challenge_id)
 
