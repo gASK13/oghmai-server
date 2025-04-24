@@ -121,11 +121,6 @@ resource "aws_dynamodb_table" "challenge_table" {
     type = "S"
   }
 
-  attribute {
-    name = "word"
-    type = "S"
-  }
-
   ttl {
     attribute_name = "ttl"
     enabled        = true
