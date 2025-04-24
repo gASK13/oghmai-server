@@ -199,9 +199,14 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "word": word_result.word.lower(),
                     "lang": word_result.language
                 },
-                UpdateExpression="SET #translation = :translation, definition = :definition, examples = :examples, status = :status, last_test = :last_test, test_results = :test_results",
+                UpdateExpression="SET #translation = :translation, #definition = :definition, #examples = :examples, #status = :status, #last_test = :last_test, #test_results = :test_results",
                 ExpressionAttributeNames={
-                    "#translation": "translation"  # Alias for reserved keyword
+                    "#translation": "translation",
+                    "#definition" : "definition",
+                    "#examples" : "examples",
+                    "#status" : "status",
+                    "#last_test" : "last_test",
+                    "#test_results" : "test_results"
                 },
                 ExpressionAttributeValues={
                     ":translation": word_result.translation,
