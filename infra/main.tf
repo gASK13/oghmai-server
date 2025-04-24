@@ -103,7 +103,7 @@ resource "aws_dynamodb_table" "recycle_bin" {
 #############################
 # DynamoDB Challenge Cache
 #############################
-resource "aws_dynamodb_table" "recycle_bin" {
+resource "aws_dynamodb_table" "challenge_table" {
   name           = "oghmai_challenges"
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
@@ -117,7 +117,7 @@ resource "aws_dynamodb_table" "recycle_bin" {
   }
 
   attribute {
-    name = "challenge_id"}
+    name = "challenge_id"
     type = "S"
   }
 
