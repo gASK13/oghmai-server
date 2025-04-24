@@ -196,17 +196,19 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
             vocabulary_table.update_item(
                 Key={
                     "user_id": user_id,
-                    "word": word_result.word.lower(),
-                    "lang": word_result.language
+                    "word": word_result.word.lower()
                 },
-                UpdateExpression="SET #translation = :translation, #definition = :definition, #examples = :examples, #status = :status, #last_test = :last_test, #test_results = :test_results",
+                UpdateExpression="SET #translation = :translation, #definition = :definition, "
+                                 "#examples = :examples, #status = :status, #last_test = :last_test, "
+                                 "#test_results = :test_results",
+                ConditionExpression=Attr("lang").eq(word_result.language),  # Ensure lang matches
                 ExpressionAttributeNames={
                     "#translation": "translation",
-                    "#definition" : "definition",
-                    "#examples" : "examples",
-                    "#status" : "status",
-                    "#last_test" : "last_test",
-                    "#test_results" : "test_results"
+                    "#definition": "definition",
+                    "#examples": "examples",
+                    "#status": "status",
+                    "#last_test": "last_test",
+                    "#test_results": "test_results"
                 },
                 ExpressionAttributeValues={
                     ":translation": word_result.translation,
