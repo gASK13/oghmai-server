@@ -69,7 +69,7 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
 
         db_service.save_word(user_id, word, allow_overwrite=True)
         db_service.delete_challenge(user_id, challenge_id)
-        return TestResult(result=ResultEnum.CORRECT, newStatus=word.status, oldStatus=oldStatus)
+        return TestResult(result=ResultEnum.CORRECT, word=challenge, newStatus=word.status, oldStatus=oldStatus)
 
     # validate "similarity"
     # TODO Bedrock
@@ -90,7 +90,7 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
 
     db_service.save_word(user_id, word, allow_overwrite=True)
     db_service.delete_challenge(user_id, challenge_id)
-    return TestResult(result=ResultEnum.INCORRECT, newStatus=word.status, oldStatus=oldStatus)
+    return TestResult(result=ResultEnum.INCORRECT, word=challenge, newStatus=word.status, oldStatus=oldStatus)
 
 
 

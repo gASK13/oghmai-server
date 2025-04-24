@@ -313,7 +313,7 @@ def load_challenge_result(user_id: str, challenge_id: str):
         items = response.get("Items", [])
         if not items:
             logging.error(f"Challenge {challenge_id} not found for user {user_id}")
-            raise HTTPException(status_code=404, detail="Error retrieving words")
+            raise HTTPException(status_code=404, detail="Error loading challenge")
 
         item = items[0]
 

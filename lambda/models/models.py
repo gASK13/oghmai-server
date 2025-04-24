@@ -39,6 +39,7 @@ class ResultEnum(str, Enum):  # Define the Enum for result
 
 class TestResult(BaseModel):
     result: ResultEnum
+    word: str
     newStatus: StatusEnum
     oldStatus: StatusEnum
 
