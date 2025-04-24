@@ -51,10 +51,6 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
     # get challenge
     challenge, lang = db_service.load_challenge_result(user_id, challenge_id)
 
-    if not challenge:
-        logging.error(f"Challenge {challenge_id} not found for user {user_id}")
-        raise HTTPException(status_code=404, detail="Error retrieving words")
-
     # validate directly
     if guess == challenge:
         logging.info(f"Correct test {challenge_id} for user {user_id}")
