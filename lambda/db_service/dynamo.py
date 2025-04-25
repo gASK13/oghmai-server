@@ -178,6 +178,25 @@ def purge_words(user_id: str, lang: str):
         logging.error(f"Error purging words: {str(e)}")
         raise HTTPException(status_code=500, detail="Error purging words")
 
+def reset_word(user_id: str, lang: str, word: str):
+    logging.info(f"Resetting word {user_id} @ {lang} - {word}")
+
+    try:
+        word = get_word(user_id, lang, word)
+        if not word:
+            logging.warning(f"Word {word} not found for reset")
+            raise HTTPException(status_code=404, detail="Word not found")
+        # Reset the word
+        word.status = StatusEnum.NEW
+        word.lastTest = None
+        word.testResults = []
+        save_word(user_id, word, allow_overwrite=True)
+
+        return {"status": "ok", "message": f"Word '{word.word}' reset for user '{user_id}'"}
+    except ClientError as e:
+        logging.error(f"Error resetting word: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = False):
     logging.info(f"Saving word {user_id} @ {word_result.language} - {word_result.word}")
 

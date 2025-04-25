@@ -80,6 +80,17 @@ async def get_words():
     words = db_service.get_words(user_id, lang)
     return WordList(words=words)
 
+@app.patch("/words")
+async def patch_words(action: str):
+    user_id = "test"
+    lang = 'IT'
+    if action == "reset":
+        for word in db_service.get_words(user_id, lang):
+            db_service.reset_word(user_id, lang, word)
+        return {"message": "Words reset"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
 @app.get("/word/{word}", response_model=WordResult)
 async def get_word(word: str):
     user_id = "test"
@@ -101,6 +112,8 @@ async def patch_word(word: str, action: str):
     lang = 'IT'
     if action == "undelete":
         return db_service.undelete_word(user_id, lang, word)
+    elif action == "reset":
+        return db_service.reset_word(user_id, lang, word)
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
