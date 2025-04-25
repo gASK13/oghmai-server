@@ -20,6 +20,17 @@ def load_prompt_template(name: str) -> str:
         logging.error(f"Prompt template not found: {template_path}")
         raise
 
+def create_challenge(word: str) -> str | None:
+    logging.info(f"Creating challenge for word {word}")
+    prompt = load_prompt_template("create_challenge").format(word=word)
+    raw_output = call_bedrock(prompt)
+    return raw_output["output"]["message"]["content"][0]["text"]
+
+def is_challenge_close(challenge: str, guess: str) -> bool:
+    logging.info(f"Checking if challenge '{challenge}' is close to guess '{guess}'")
+    prompt = load_prompt_template("challenge_check").format(challenge=challenge, guess=guess)
+    raw_output = call_bedrock(prompt)
+    return raw_output["output"]["message"]["content"][0]["text"].strip().lower() == "SI"
 
 def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     logging.info(f"Describing word from definition {definition} with exclusions {exclusions}")
@@ -34,22 +45,17 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            logging.debug(f"Sending prompt to Bedrock (attempt {attempt}/{MAX_RETRIES}): {prompt}")
-
             raw_output = call_bedrock(prompt)
-
-            logging.debug(f"Received response from Bedrock: {raw_output}")
 
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
 
             if exclusions is not None and parsed["word"] in exclusions:
-                logging.warning(f"Exclusion word found in response, retrying")
+                logging.warning(f"Exclusion word found in response at attempt {attempt}, retrying")
                 continue
 
             return WordResult(**parsed)
-
         except json.JSONDecodeError as e:
-            logging.error(f"Invalid JSON response from Bedrock: {str(e)}")
+            logging.error(f"Invalid JSON response from Bedrock attempt {attempt}: {str(e)}")
 
     logging.warning(f"Failed to describe word after {MAX_RETRIES} attempts")
     return None
@@ -57,6 +63,8 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
 
 def call_bedrock(prompt: str, temperature=0.7, max_tokens=500):
     try:
+        logging.debug(f"Calling Bedrock with prompt: {prompt}")
+
         response = bedrock.invoke_model(
             modelId=BEDROCK_MODEL_ID,
             body=bytes(
@@ -84,6 +92,8 @@ def call_bedrock(prompt: str, temperature=0.7, max_tokens=500):
 
         response_body = response["body"].read().decode("utf-8")
         result = json.loads(response_body)
+
+        logging.debug(f"Received response from Bedrock: {result}")
 
         return result
     except Exception as e:

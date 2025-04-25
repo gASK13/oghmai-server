@@ -39,9 +39,9 @@ class ResultEnum(str, Enum):  # Define the Enum for result
 
 class TestResult(BaseModel):
     result: ResultEnum
-    word: str
-    newStatus: StatusEnum
-    oldStatus: StatusEnum
+    word: Optional[str] = None
+    newStatus: Optional[StatusEnum] = None
+    oldStatus: Optional[StatusEnum] = None
 
 class TestStatistics(BaseModel):
     available: dict[StatusEnum, int] = {s: 0 for s in StatusEnum}   # Map StatusEnum to integer counts

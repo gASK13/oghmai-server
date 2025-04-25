@@ -1,0 +1,3 @@
+Qual'e la possibilita che la parola "{guess}" ha il significato "{challenge}"?
+
+Rispondi sollo con SI o NO, non scrivi niente altro.

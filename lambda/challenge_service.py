@@ -1,9 +1,8 @@
 import random
 from datetime import datetime
 
-import db_service
 import bedrock_service
-from fastapi import HTTPException
+import db_service
 from models import *
 from utils import logging
 
@@ -37,8 +36,7 @@ def get_next_test(user_id: str, lang: str):
     word = random.choice(words)
 
     # get from bedrock
-    # TODO BEDROCK CALL
-    desc = f"Lorem Ipsum - {word.word}"
+    desc = bedrock_service.create_challenge(word.word)
 
     # store
     ch_id = db_service.store_challenge(user_id, word.language, desc, word.word)
@@ -59,39 +57,40 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
         word.testResults.append(True)
         word.testResults = word.testResults[-3:]
         word.lastTest = datetime.now()
-        oldStatus = word.status
+        old_status = word.status
 
         # If all 3 last results have been True, raise the level
         if len(word.testResults) == 3 and all(word.testResults):
             word.status = word.status.raise_level()
-            if word.status != oldStatus:
+            if word.status != old_status:
                 logging.info(f"Raising level for word {word.word} @ {word.language} for user {user_id}")
                 word.testResults = []
 
         db_service.save_word(user_id, word, allow_overwrite=True)
         db_service.delete_challenge(user_id, challenge_id)
-        return TestResult(result=ResultEnum.CORRECT, word=challenge, newStatus=word.status, oldStatus=oldStatus)
+        return TestResult(result=ResultEnum.CORRECT, word=challenge, newStatus=word.status, oldStatus=old_status)
 
     # validate "similarity"
-    # TODO Bedrock
+    if bedrock_service.is_challenge_close(challenge, guess):
+        return TestResult(result=ResultEnum.PARTIAL)
 
     # totally wrong?
     word = db_service.get_word(user_id, lang, challenge)
     word.testResults.append(False)
     word.testResults = word.testResults[-3:]
     word.lastTest = datetime.now()
-    oldStatus = word.status
+    old_status = word.status
 
     # If all 3 last results have been True, raise the level
     if len(word.testResults) == 3 and not any(word.testResults):
         word.status = word.status.lower_level()
-        if word.status != oldStatus:
+        if word.status != old_status:
             logging.info(f"Lowering level for word {word.word} @ {word.language} for user {user_id}")
             word.testResults = []
 
     db_service.save_word(user_id, word, allow_overwrite=True)
     db_service.delete_challenge(user_id, challenge_id)
-    return TestResult(result=ResultEnum.INCORRECT, word=challenge, newStatus=word.status, oldStatus=oldStatus)
+    return TestResult(result=ResultEnum.INCORRECT, word=challenge, newStatus=word.status, oldStatus=old_status)
 
 
 
