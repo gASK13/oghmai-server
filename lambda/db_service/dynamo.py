@@ -234,7 +234,7 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     ":definition": word_result.definition,
                     ":examples": word_result.examples,
                     ":status": word_result.status,
-                    ":last_test": int(datetime.now().timestamp()),
+                    ":last_test": int(word_result.lastTest.timestamp()) if word_result.lastTest else None,
                     ":test_results": word_result.testResults or []
                 }
             )
