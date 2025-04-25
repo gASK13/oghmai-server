@@ -295,6 +295,7 @@ def store_challenge(user_id: str, lang: str, description: str, word: str):
                 "word": word.lower(),
                 "lang": lang,
                 "created_at": int(datetime.now().timestamp()),
+                "tries": 0,
                 "ttl": int(time.time()) + 3600,  # 1 hour from now should be enough
             }
         )
@@ -317,10 +318,31 @@ def load_challenge_result(user_id: str, challenge_id: str):
 
         item = items[0]
 
-        return item["word"], item["lang"]
+        return item["word"], item["lang"], item["tries"]
     except ClientError as e:
         logging.error(f"Error loading challenge: {str(e)}")
         raise HTTPException(status_code=500, detail="Error loading challenge")
+
+
+def increment_challenge_tries(user_id: str, challenge_id: str):
+    # increment tries in dynamo
+    try:
+        challenge_table.update_item(
+            Key={
+                "user_id": user_id,
+                "challenge_id": challenge_id
+            },
+            UpdateExpression="SET tries = tries + :inc",
+            ExpressionAttributeValues={
+                ":inc": 1
+            },
+            ReturnValues="UPDATED_NEW"
+        )
+
+        return
+    except ClientError as e:
+        logging.error(f"Error incrementing challenge tries: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error incrementing challenge tries")
 
 def delete_challenge(user_id: str, challenge_id: str):
     # delete challenge from dynamo

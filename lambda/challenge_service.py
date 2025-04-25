@@ -13,6 +13,8 @@ FILTER = {
     StatusEnum.MASTERED: 14,
 }
 
+MAX_MISSES = 2
+
 def get_statistics(user_id: str, lang: str):
     logging.info(f"Getting statistics for user {user_id} @ {lang}")
     words = db_service.get_testable_words(user_id, lang, FILTER)
@@ -48,7 +50,7 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
     logging.info(f"Validating test {challenge_id} for user {user_id}")
     guess = guess.strip().lower()
     # get challenge
-    challenge, lang = db_service.load_challenge_result(user_id, challenge_id)
+    challenge, lang, tries = db_service.load_challenge_result(user_id, challenge_id)
 
     # validate directly
     if guess == challenge:
@@ -71,7 +73,9 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
         return TestResult(result=ResultEnum.CORRECT, word=challenge, newStatus=word.status, oldStatus=old_status)
 
     # validate "similarity"
-    if bedrock_service.is_challenge_close(challenge, guess):
+    if tries < MAX_MISSES and bedrock_service.is_challenge_close(challenge, guess):
+        db_service.increment_challenge_tries(user_id, challenge_id)
+        logging.info(f"Close guess {guess} for {challenge_id} for user {user_id}")
         return TestResult(result=ResultEnum.PARTIAL)
 
     # totally wrong?
