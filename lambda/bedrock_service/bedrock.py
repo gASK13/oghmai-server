@@ -30,7 +30,7 @@ def is_challenge_close(challenge: str, guess: str) -> bool:
     logging.info(f"Checking if challenge '{challenge}' is close to guess '{guess}'")
     prompt = load_prompt_template("challenge_check").format(challenge=challenge, guess=guess)
     raw_output = call_bedrock(prompt)
-    return raw_output["output"]["message"]["content"][0]["text"].strip().lower() == "SI"
+    return raw_output["output"]["message"]["content"][0]["text"].strip().lower() == "si"
 
 def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     logging.info(f"Describing word from definition {definition} with exclusions {exclusions}")
