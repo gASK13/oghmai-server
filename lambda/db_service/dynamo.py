@@ -318,7 +318,7 @@ def load_challenge_result(user_id: str, challenge_id: str):
 
         item = items[0]
 
-        return item["word"], item["lang"], item["tries"]
+        return item
     except ClientError as e:
         logging.error(f"Error loading challenge: {str(e)}")
         raise HTTPException(status_code=500, detail="Error loading challenge")

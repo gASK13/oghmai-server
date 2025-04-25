@@ -50,12 +50,12 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
     logging.info(f"Validating test {challenge_id} for user {user_id}")
     guess = guess.strip().lower()
     # get challenge
-    challenge, lang, tries = db_service.load_challenge_result(user_id, challenge_id)
+    challenge = db_service.load_challenge_result(user_id, challenge_id)
 
     # validate directly
-    if guess == challenge:
+    if guess == challenge["word"]:
         logging.info(f"Correct test {challenge_id} for user {user_id}")
-        word = db_service.get_word(user_id, lang, challenge)
+        word = db_service.get_word(user_id, challenge["lang"], challenge["word"])
         word.testResults.append(True)
         word.testResults = word.testResults[-3:]
         word.lastTest = datetime.now()
@@ -70,16 +70,16 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
 
         db_service.save_word(user_id, word, allow_overwrite=True)
         db_service.delete_challenge(user_id, challenge_id)
-        return TestResult(result=ResultEnum.CORRECT, word=challenge, newStatus=word.status, oldStatus=old_status)
+        return TestResult(result=ResultEnum.CORRECT, word=challenge["word"], newStatus=word.status, oldStatus=old_status)
 
     # validate "similarity"
-    if tries < MAX_MISSES and bedrock_service.is_challenge_close(challenge, guess):
+    if challenge["tries"] < MAX_MISSES and bedrock_service.is_challenge_close(challenge["description"], guess):
         db_service.increment_challenge_tries(user_id, challenge_id)
         logging.info(f"Close guess {guess} for {challenge_id} for user {user_id}")
         return TestResult(result=ResultEnum.PARTIAL)
 
     # totally wrong?
-    word = db_service.get_word(user_id, lang, challenge)
+    word = db_service.get_word(user_id, challenge["lang"], challenge["word"])
     word.testResults.append(False)
     word.testResults = word.testResults[-3:]
     word.lastTest = datetime.now()
@@ -94,7 +94,7 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
 
     db_service.save_word(user_id, word, allow_overwrite=True)
     db_service.delete_challenge(user_id, challenge_id)
-    return TestResult(result=ResultEnum.INCORRECT, word=challenge, newStatus=word.status, oldStatus=old_status)
+    return TestResult(result=ResultEnum.INCORRECT, word=challenge["word"], newStatus=word.status, oldStatus=old_status)
 
 
 
