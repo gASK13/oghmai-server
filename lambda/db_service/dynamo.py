@@ -43,16 +43,16 @@ def get_words(user_id: str, lang: str, status: str = None, failed_last_test: boo
                 logging.warning(f"Invalid status value in filter: {str(e)}")
                 raise HTTPException(status_code=400, detail=f"Invalid status value: {str(e)}")
 
-        # Add contains filter if provided
-        if contains:
-            filter_expression = filter_expression & Attr("word").contains(contains.lower())
-
         # Query the table with the filter expression
         response = vocabulary_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
             FilterExpression=filter_expression
         )
         items = response.get("Items", [])
+
+        # Apply the 'contains' filter in memory
+        if contains:
+            items = [item for item in items if contains.lower() in item["word"].lower()]
 
         # Convert items to WordResult objects
         word_results = [convert_to_result(item) for item in items]
