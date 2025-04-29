@@ -2,7 +2,7 @@ import uuid
 
 import boto3
 from botocore.exceptions import ClientError
-from models import WordResult, StatusEnum
+from models import *
 import os
 from fastapi import HTTPException
 from boto3.dynamodb.conditions import Key, Attr
@@ -63,7 +63,7 @@ def get_words(user_id: str, lang: str, status: str = None, failed_last_test: boo
 
         logging.info(f"Retrieved {len(word_results)} filtered words for user {user_id} @ {lang}")
 
-        return [word.word for word in word_results]
+        return [convert_to_item(word) for word in word_results]
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
@@ -107,6 +107,13 @@ def convert_to_result(item):
     )
     return word_result
 
+def convert_to_item(item):
+    word_item = WordItem(
+        word=item["word"],
+        status=item["status"],
+        testResults=item["test_results"]
+    )
+    return word_item
 
 def delete_word(user_id: str, lang: str, word: str):
     logging.info(f"Deleting word {user_id} @ {lang} - {word}")

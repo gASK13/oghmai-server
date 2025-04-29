@@ -92,7 +92,7 @@ async def patch_words(action: str):
     lang = 'IT'
     if action == "reset":
         for word in db_service.get_words(user_id, lang):
-            db_service.reset_word(user_id, lang, word)
+            db_service.reset_word(user_id, lang, word.word)
         return {"message": "Words reset"}
     else:
         raise HTTPException(status_code=400, detail="Invalid action")

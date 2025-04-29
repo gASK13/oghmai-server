@@ -57,5 +57,10 @@ class WordResult(BaseModel):
     lastTest: Optional[datetime] = None
     testResults: Optional[list[bool]] = None
 
+class WordItem(BaseModel):
+    word: str
+    status: StatusEnum
+    testResults: list[bool]
+
 class WordList(BaseModel):
-    words: list[str]
+    words: list[WordItem]
