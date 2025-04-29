@@ -74,10 +74,16 @@ async def validate_test(id: str, guess: str):
     return challenge_service.validate_test(user_id, id, guess)
 
 @app.get("/words", response_model=WordList)
-async def get_words():
+async def get_words(
+    status: str = None,
+    failed_last_test: bool = False,
+    contains: str = None
+):
     user_id = "test"
     lang = 'IT'
-    words = db_service.get_words(user_id, lang)
+
+    words = db_service.get_words(user_id, lang, status, failed_last_test, contains)
+
     return WordList(words=words)
 
 @app.patch("/words")

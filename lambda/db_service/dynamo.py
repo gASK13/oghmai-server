@@ -18,26 +18,64 @@ recycle_bin_table = dynamodb.Table(recycle_bin_table_name)
 challenge_table_name = os.getenv("CHALLENGE_TABLE", "oghmai_challenges")
 challenge_table = dynamodb.Table(challenge_table_name)
 
-def get_words(user_id: str, lang: str):
-    logging.info(f"Getting all words for user {user_id} @ {lang}")
+def get_words(user_id: str, lang: str, status: str = None, failed_last_test: bool = False, contains: str = None):
+    logging.info(f"Filtering words for user {user_id} @ {lang} with status={status}, failed_last_test={failed_last_test}, contains={contains}")
 
     try:
+        # Start with the base filter expression for language
+        filter_expression = Attr("lang").eq(lang)
+
+        # Add status filter if provided
+        if status:
+            try:
+                status_values = [s.strip() for s in status.split(',')]
+                # Validate status values
+                for s in status_values:
+                    # This will raise ValueError if the status is invalid
+                    StatusEnum(s)
+
+                # If there's only one status, use eq, otherwise use is_in
+                if len(status_values) == 1:
+                    filter_expression = filter_expression & Attr("status").eq(status_values[0])
+                else:
+                    filter_expression = filter_expression & Attr("status").is_in(status_values)
+            except ValueError as e:
+                logging.warning(f"Invalid status value in filter: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"Invalid status value: {str(e)}")
+
+        # Add contains filter if provided
+        if contains:
+            filter_expression = filter_expression & Attr("word").contains(contains.lower())
+
+        # Query the table with the filter expression
         response = vocabulary_table.query(
             KeyConditionExpression=Key("user_id").eq(user_id),
-            FilterExpression=Attr("lang").eq(lang)
+            FilterExpression=filter_expression
         )
-        items = [item["word"] for item in response.get("Items", [])]
+        items = response.get("Items", [])
 
-        logging.info(f"Retrieved words for user {user_id} @ {lang} - {len(items)}")
+        # Convert items to WordResult objects
+        word_results = [convert_to_result(item) for item in items]
 
-        return items
+        # Apply failed_last_test filter in memory (can't be done efficiently in DynamoDB)
+        if failed_last_test:
+            word_results = [w for w in word_results if w.testResults and w.testResults[-1] == False]
+
+        logging.info(f"Retrieved {len(word_results)} filtered words for user {user_id} @ {lang}")
+
+        return [word.word for word in word_results]
     except Exception as e:
-        logging.error(f"Error retrieving words", {
+        if isinstance(e, HTTPException):
+            raise e
+        logging.error(f"Error filtering words", {
             "user_id": user_id,
             "lang": lang,
+            "status": status,
+            "failed_last_test": failed_last_test,
+            "contains": contains,
             "error_message": str(e)
         })
-        raise HTTPException(status_code=500, detail="Error retrieving words")
+        raise HTTPException(status_code=500, detail="Error filtering words")
 
 def get_word(user_id: str, lang: str, word: str):
     logging.info(f"Getting word details {user_id} @ {lang} - {word}")
