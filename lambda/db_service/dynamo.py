@@ -63,7 +63,7 @@ def get_words(user_id: str, lang: str, status: str = None, failed_last_test: boo
 
         logging.info(f"Retrieved {len(word_results)} filtered words for user {user_id} @ {lang}")
 
-        return [convert_to_item(word) for word in word_results]
+        return [convert_result_to_item(word) for word in word_results]
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
@@ -107,11 +107,11 @@ def convert_to_result(item):
     )
     return word_result
 
-def convert_to_item(item):
+def convert_result_to_item(item: WordResult):
     word_item = WordItem(
-        word=item["word"],
-        status=item["status"],
-        testResults=item["test_results"]
+        word=item.word,
+        status=item.status,
+        testResults=item.testResults
     )
     return word_item
 
