@@ -67,14 +67,7 @@ def get_words(user_id: str, lang: str, status: str = None, failed_last_test: boo
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        logging.error(f"Error filtering words", {
-            "user_id": user_id,
-            "lang": lang,
-            "status": status,
-            "failed_last_test": failed_last_test,
-            "contains": contains,
-            "error_message": str(e)
-        })
+        logging.error(f"Error filtering words for user {user_id} @ {lang}: {str(e)}")
         raise HTTPException(status_code=500, detail="Error filtering words")
 
 def get_word(user_id: str, lang: str, word: str):
