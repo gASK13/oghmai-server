@@ -133,7 +133,7 @@ async def describe_word(req: DescriptionRequest):
     result.status = existing_word.status if existing_word else StatusEnum.UNSAVED
     return result
 
-@app.post("/save-word")
+@app.post("/word")
 async def save_word(word_result: WordResult):
     user_id = "test"  # For now hardcoded
     result = db_service.save_word(user_id, word_result)
