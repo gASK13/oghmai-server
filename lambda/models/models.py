@@ -32,6 +32,10 @@ class StatusEnum(str, Enum):  # Define the Enum for status
             return levels[current_index - 1]
         return self
 
+class WordActionEnum(str, Enum):
+    UNDELETE = "UNDELETE"
+    RESET = "RESET"
+
 class ResultEnum(str, Enum):  # Define the Enum for result
     INCORRECT = "INCORRECT"
     CORRECT = "CORRECT"

@@ -87,10 +87,10 @@ async def get_words(
     return WordList(words=words)
 
 @app.patch("/words")
-async def patch_words(action: str):
+async def patch_words(action: WordActionEnum):
     user_id = "test"
     lang = 'IT'
-    if action == "reset":
+    if action == WordActionEnum.RESET:
         for word in db_service.get_words(user_id, lang):
             db_service.reset_word(user_id, lang, word.word)
         return {"message": "Words reset"}
@@ -113,12 +113,12 @@ async def get_word(word: str):
     return db_service.delete_word(user_id, lang, word)
 
 @app.patch("/word/{word}")
-async def patch_word(word: str, action: str):
+async def patch_word(word: str, action: WordActionEnum):
     user_id = "test"  # Hardcoded for now
     lang = 'IT'
-    if action == "undelete":
+    if action == WordActionEnum.UNDELETE:
         return db_service.undelete_word(user_id, lang, word)
-    elif action == "reset":
+    elif action == WordActionEnum.RESET:
         return db_service.reset_word(user_id, lang, word)
     else:
         raise HTTPException(status_code=400, detail="Invalid action")

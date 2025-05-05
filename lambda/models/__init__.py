@@ -1,3 +1,3 @@
-from .models import DescriptionRequest, WordResult, WordList, StatusEnum, TestChallenge, TestStatistics, TestResult, ResultEnum, WordItem
+from .models import DescriptionRequest, WordResult, WordList, StatusEnum, TestChallenge, TestStatistics, TestResult, ResultEnum, WordItem, WordActionEnum
 
-__all__ = ['DescriptionRequest', 'WordResult', 'WordList', 'StatusEnum', 'TestChallenge', 'TestStatistics', 'TestResult', 'ResultEnum', 'WordItem']
+__all__ = ['DescriptionRequest', 'WordResult', 'WordList', 'StatusEnum', 'TestChallenge', 'TestStatistics', 'TestResult', 'ResultEnum', 'WordItem', 'WordActionEnum']
