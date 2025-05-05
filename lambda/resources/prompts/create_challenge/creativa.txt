@@ -1,1 +1,1 @@
-Scrivimi una molto creativa ma breve descrizione della parola '{word}' senza usarla direttamente.
+Scrivimi una molto creativa, ma anche breve descrizione della parola '{word}' in italiano semplice senza usarla direttamente.

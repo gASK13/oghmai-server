@@ -1,1 +1,1 @@
-Scrivimi una frase lunga che usa la parola '{word}', ma invece la parola usi ......... perche vorrei provarla. Non scrivi nessun altro, solamente la frase.
+Scrivimi una frase lunga che usa la parola '{word}', ma invece la parola usi [LA PAROLA]. La frase deve essere una in questo e possibile indovinare questa parola facilmente. Non scrivi nessun altro, solamente la frase.
