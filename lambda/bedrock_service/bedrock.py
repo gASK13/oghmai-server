@@ -83,7 +83,7 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     return None
 
 
-def call_bedrock(prompt: str, temperature=0.9, max_tokens=60):
+def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
     try:
         logging.debug(f"Calling Bedrock with prompt: {prompt}")
 
