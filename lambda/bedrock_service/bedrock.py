@@ -38,7 +38,7 @@ def load_prompt_template(name: str) -> str:
 
 def create_challenge(word: str) -> str | None:
     logging.info(f"Creating challenge for word {word}")
-    prompt = load_prompt_template("create_challenge").format(word=word)
+    prompt = load_prompt_template_random("create_challenge").format(word=word)
     raw_output = call_bedrock(prompt)
     return raw_output["output"]["message"]["content"][0]["text"]
 
