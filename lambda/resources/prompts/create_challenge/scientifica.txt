@@ -1,0 +1,1 @@
+Scrivimi una molto breve descrizione un po' scientifica della parola '{word}' senza usarla direttamente.

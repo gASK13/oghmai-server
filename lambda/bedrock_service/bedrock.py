@@ -3,6 +3,7 @@ import os
 import json
 from models import WordResult
 from utils import logging
+import random
 
 # Optional: store model ID in env vars or config
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
@@ -10,14 +11,29 @@ MAX_RETRIES = 3
 
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
+def load_prompt_template_random(name: str) -> str:
+    # Load files in the directory and randomly select one
+    template_dir = f"resources/prompts/{name}"
+    try:
+        files = [f for f in os.listdir(template_dir) if f.endswith(".txt")]
+        if not files:
+            raise FileNotFoundError(f"No prompt templates found in {template_dir}")
+        selected_file = random.choice(files)
+        template_path = os.path.join(template_dir, selected_file)
+        with open(template_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError as e:
+        logging.error(f"Error loading prompt template from {template_dir}: {str(e)}")
+        raise
+
 
 def load_prompt_template(name: str) -> str:
     template_path = f"resources/prompts/{name}.txt"
     try:
         with open(template_path, "r", encoding="utf-8") as f:
             return f.read()
-    except FileNotFoundError:
-        logging.error(f"Prompt template not found: {template_path}")
+    except FileNotFoundError as e:
+        logging.error(f"Error loading prompt template from {template_path}: {str(e)}")
         raise
 
 def create_challenge(word: str) -> str | None:
@@ -31,6 +47,12 @@ def is_challenge_close(challenge: str, guess: str) -> bool:
     prompt = load_prompt_template("challenge_check").format(challenge=challenge, guess=guess)
     raw_output = call_bedrock(prompt)
     return raw_output["output"]["message"]["content"][0]["text"].strip().lower() == "si"
+
+def get_challenge_hint(challenge: str, guess: str, word: str) -> str:
+    logging.info(f"Getting hint for challenge '{challenge}' with guess '{guess}' and word '{word}'")
+    prompt = load_prompt_template("challenge_hint").format(challenge=challenge, guess=guess, word=word)
+    raw_output = call_bedrock(prompt)
+    return raw_output["output"]["message"]["content"][0]["text"].strip()
 
 def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     logging.info(f"Describing word from definition {definition} with exclusions {exclusions}")

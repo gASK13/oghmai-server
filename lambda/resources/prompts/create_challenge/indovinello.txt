@@ -1,0 +1,1 @@
+Scrivimi un indovinello breve per la parola '{word}' senza usarla direttamente. Non scrivi nessun altro, solamente l'indovinello.

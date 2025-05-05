@@ -1,0 +1,1 @@
+Scrivimi una frase lunga che usa la parola '{word}', ma invece la parola usi ......... perche vorrei provarla. Non scrivi nessun altro, solamente la frase.

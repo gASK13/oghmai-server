@@ -76,7 +76,8 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
     if challenge["tries"] < MAX_MISSES and bedrock_service.is_challenge_close(challenge["description"], guess):
         db_service.increment_challenge_tries(user_id, challenge_id)
         logging.info(f"Close guess {guess} for {challenge_id} for user {user_id}")
-        return TestResult(result=ResultEnum.PARTIAL)
+        hint = bedrock_service.get_challenge_hint(challenge["description"], guess, challenge["word"])
+        return TestResult(result=ResultEnum.PARTIAL, suggestion=hint)
 
     # totally wrong?
     word = db_service.get_word(user_id, challenge["lang"], challenge["word"])

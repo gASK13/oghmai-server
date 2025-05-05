@@ -1,13 +1,13 @@
 Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizione "{definition}" in un formato strutturato:
 
-1. La parola che più probabilmente corrisponde alla descrizione in Italiano
+1. La parola che più probabilmente corrisponde alla descrizione in Italiano (in forma singolar per il nome, al maschile per l'aggettivo e infinito per verbo).
 2. La traduzione in inglese della parola.
 3. Una definizione molto breve della parola in Italiano.
-4. Tre frasi in Italiano di esempio che utilizzano la parola in contesti diversi, utilizzando forme e tempi verbali diversi ove possibile.
+4. Tre frasi in Italiano di esempio che utilizzano la parola in contesti diversi, utilizzando la parola spiegata in plurale e singolare e tempi verbali diversi.
 
-La parola non e una delle sequente parole: [{exclusions}].
+La parola non e una delle seguente parole: [{exclusions}].
 
-Struttura l"output in questo modo:
+Struttura il prodotto in questo modo:
 {{
 "word": "la parola",
 "translation": "traduzione in inglese",

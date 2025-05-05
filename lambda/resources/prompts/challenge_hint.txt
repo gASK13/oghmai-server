@@ -1,0 +1,4 @@
+L'utente ha provato che la parola spiegata come "{challenge}" era "{guess}".
+Questo non e vero, la parola che cerchiamo e "{word}".
+Scrivimi un breve suggerimento per l'utente senza usare la parola "{word}" direttamente.
+Scrivi solamente il suggerimento, niente altro.

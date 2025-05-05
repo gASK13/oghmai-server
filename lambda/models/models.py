@@ -39,6 +39,7 @@ class ResultEnum(str, Enum):  # Define the Enum for result
 
 class TestResult(BaseModel):
     result: ResultEnum
+    suggestion: Optional[str] = None
     word: Optional[str] = None
     newStatus: Optional[StatusEnum] = None
     oldStatus: Optional[StatusEnum] = None
