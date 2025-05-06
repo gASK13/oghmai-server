@@ -168,6 +168,7 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
   description = "OghmAI REST API for vocabulary app"
   body = templatefile("openapi.yaml", {
     lambda_arn = aws_lambda_function.api_handler.invoke_arn
+    cognito_user_pool_arn = aws_cognito_user_pool.oghmai_user_pool.id
   })
 }
 
@@ -198,41 +199,6 @@ resource "aws_api_gateway_deployment" "oghmai_deployment" {
   triggers = {
     always_deploy = timestamp()
   }
-}
-
-#############################
-# API Key + Usage Plan
-#############################
-
-resource "aws_api_gateway_api_key" "oghmai_dev_key" {
-  name        = "OghmAI-Dev-Key"
-  description = "API key for development use"
-  enabled     = true
-}
-
-resource "aws_api_gateway_usage_plan" "oghmai_usage_plan" {
-  name = "OghmAI-Dev-UsagePlan"
-
-  api_stages {
-    api_id = aws_api_gateway_rest_api.oghmai_api.id
-    stage  = aws_api_gateway_stage.oghmai_stage.stage_name
-  }
-
-  throttle_settings {
-    burst_limit = 10
-    rate_limit  = 5
-  }
-
-  quota_settings {
-    limit  = 1000
-    period = "DAY"
-  }
-}
-
-resource "aws_api_gateway_usage_plan_key" "oghmai_key_association" {
-  key_id        = aws_api_gateway_api_key.oghmai_dev_key.id
-  key_type      = "API_KEY"
-  usage_plan_id = aws_api_gateway_usage_plan.oghmai_usage_plan.id
 }
 
 #############################
@@ -283,17 +249,6 @@ resource "aws_api_gateway_authorizer" "oghmai_cognito_authorizer" {
   type            = "COGNITO_USER_POOLS"
   provider_arns   = [aws_cognito_user_pool.oghmai_user_pool.arn]
   identity_source = "method.request.header.Authorization"
-}
-
-#############################
-# Update API Gateway Integration
-#############################
-resource "aws_api_gateway_method" "oghmai_api_method" {
-  rest_api_id   = aws_api_gateway_rest_api.oghmai_api.id
-  resource_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
-  http_method   = "ANY"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.oghmai_cognito_authorizer.id
 }
 
 #############################

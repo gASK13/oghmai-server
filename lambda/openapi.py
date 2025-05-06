@@ -15,19 +15,24 @@ openapi_schema["info"] = {
 }
 
 # Add API Key security scheme
-openapi_schema["components"]["securitySchemes"] = {
-    "api_key": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-api-key"
+openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})
+openapi_schema["components"]["securitySchemes"]["CognitoAuthorizer"] = {
+    "type": "apiKey",
+    "name": "Authorization",
+    "in": "header",
+    "x-amazon-apigateway-authorizer": {
+        "type": "cognito_user_pools",
+        "providerARNs": [
+            "${cognito_user_pool_arn}"  # Replace this when deploying
+        ]
     }
 }
 
 # Add security and integration to each method
 for path, methods in openapi_schema["paths"].items():
     for method, details in methods.items():
-        # Add security definition
-        details["security"] = [{"api_key": []}]
+        # Add Cognito security requirement
+        details["security"] = [{"CognitoAuthorizer": []}]
 
         # Add x-amazon-apigateway-integration
         details["x-amazon-apigateway-integration"] = {
