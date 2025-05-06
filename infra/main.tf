@@ -241,17 +241,6 @@ resource "aws_cognito_user_pool_client" "oghmai_android_client" {
 }
 
 #############################
-# API Gateway Cognito Authorizer
-#############################
-resource "aws_api_gateway_authorizer" "oghmai_cognito_authorizer" {
-  name            = "oghmai-cognito-authorizer"
-  rest_api_id     = aws_api_gateway_rest_api.oghmai_api.id
-  type            = "COGNITO_USER_POOLS"
-  provider_arns   = [aws_cognito_user_pool.oghmai_user_pool.arn]
-  identity_source = "method.request.header.Authorization"
-}
-
-#############################
 # Update Lambda permissions to allow Cognito claims in the event
 #############################
 resource "aws_lambda_permission" "allow_apigw_with_cognito" {
