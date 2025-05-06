@@ -168,7 +168,7 @@ resource "aws_api_gateway_rest_api" "oghmai_api" {
   description = "OghmAI REST API for vocabulary app"
   body = templatefile("openapi.yaml", {
     lambda_arn = aws_lambda_function.api_handler.invoke_arn
-    cognito_user_pool_arn = aws_cognito_user_pool.oghmai_user_pool.invoke_arn
+    cognito_user_pool_arn = aws_cognito_user_pool.oghmai_user_pool.arn
   })
 }
 
