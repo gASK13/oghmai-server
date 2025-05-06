@@ -201,6 +201,41 @@ resource "aws_api_gateway_deployment" "oghmai_deployment" {
 }
 
 #############################
+# API Key + Usage Plan
+#############################
+
+resource "aws_api_gateway_api_key" "oghmai_dev_key" {
+  name        = "OghmAI-Dev-Key"
+  description = "API key for development use"
+  enabled     = true
+}
+
+resource "aws_api_gateway_usage_plan" "oghmai_usage_plan" {
+  name = "OghmAI-Dev-UsagePlan"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.oghmai_api.id
+    stage  = aws_api_gateway_stage.oghmai_stage.stage_name
+  }
+
+  throttle_settings {
+    burst_limit = 10
+    rate_limit  = 5
+  }
+
+  quota_settings {
+    limit  = 1000
+    period = "DAY"
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "oghmai_key_association" {
+  key_id        = aws_api_gateway_api_key.oghmai_dev_key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.oghmai_usage_plan.id
+}
+
+#############################
 # Cognito User Pool
 #############################
 resource "aws_cognito_user_pool" "oghmai_user_pool" {
