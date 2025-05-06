@@ -269,8 +269,8 @@ resource "aws_cognito_user_pool_client" "oghmai_android_client" {
   callback_urls                        = ["net.gask13.oghmai://callback"] # Replace with your app's callback URL
   logout_urls                          = ["net.gask13.oghmai://logout"]   # Replace with your app's logout URL
   refresh_token_validity               = 30                               # Days
-  access_token_validity                = 60                               # Minutes
-  id_token_validity                    = 60                               # Minutes
+  access_token_validity                = 60m                               # Minutes
+  id_token_validity                    = 60m                               # Minutes
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_USER_PASSWORD_AUTH"]
 }
 
