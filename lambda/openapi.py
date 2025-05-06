@@ -7,7 +7,7 @@ openapi_schema = app.openapi()
 # Force OpenAPI version to 3.0.0
 openapi_schema["openapi"] = "3.0.0"
 
-# Add custom info section
+# Add a custom info section
 openapi_schema["info"] = {
     "title": "OghmAI API",
     "description": "API for the OghmAI vocabulary app",

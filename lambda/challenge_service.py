@@ -34,7 +34,7 @@ def get_next_test(user_id: str, lang: str):
         logging.info(f"No words available for user {user_id} @ {lang}")
         return None
 
-    # select random word
+    # select a random word
     word = random.choice(words)
 
     # get from bedrock
@@ -49,7 +49,7 @@ def get_next_test(user_id: str, lang: str):
 def validate_test(user_id: str, challenge_id: str, guess: str):
     logging.info(f"Validating test {challenge_id} for user {user_id}")
     guess = guess.strip().lower()
-    # get challenge
+    # get the challenge
     challenge = db_service.load_challenge_result(user_id, challenge_id)
 
     # validate directly

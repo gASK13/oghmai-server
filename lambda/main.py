@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 from models import *
@@ -12,10 +12,21 @@ import challenge_service
 app = FastAPI()
 handler = Mangum(app)
 
+# Dependency to extract user info from the request
+def get_current_user(request: Request):
+    claims = request.scope.get("aws.event", {}).get("requestContext", {}).get("authorizer", {}).get("claims", {})
+    if not claims:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {
+        "user_id": claims.get("sub"),
+        "email": claims.get("email"),
+        "username": claims.get("cognito:username"),
+    }
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     # Generate a request ID for tracking
-    request_id = logging.set_request_id()
+    logging.set_request_id()
 
     # Log the incoming request
     start_time = time.time()
@@ -52,15 +63,15 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 @app.get("/test", response_model=TestStatistics)
-async def get_available_tests():
-    user_id = "test"
+async def get_available_tests(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     return challenge_service.get_statistics(user_id, lang)
 
 
 @app.get("/test/next", response_model=TestChallenge)
-async def get_next_test():
-    user_id = "test"
+async def get_next_test(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     next_test = challenge_service.get_next_test(user_id, lang)
     if next_test is None:
@@ -68,18 +79,19 @@ async def get_next_test():
     return next_test
 
 
-@app.put("/test/{id}", response_model=TestResult)
-async def validate_test(id: str, guess: str):
-    user_id = "test"
-    return challenge_service.validate_test(user_id, id, guess)
+@app.put("/test/{ch_id}", response_model=TestResult)
+async def validate_test(ch_id: str, guess: str, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
+    return challenge_service.validate_test(user_id, ch_id, guess)
 
 @app.get("/words", response_model=WordList)
 async def get_words(
     status: str = None,
     failed_last_test: bool = False,
-    contains: str = None
+    contains: str = None,
+    current_user: dict = Depends(get_current_user),
 ):
-    user_id = "test"
+    user_id = current_user["user_id"]
     lang = 'IT'
 
     words = db_service.get_words(user_id, lang, status, failed_last_test, contains)
@@ -87,8 +99,8 @@ async def get_words(
     return WordList(words=words)
 
 @app.patch("/words")
-async def patch_words(action: WordActionEnum):
-    user_id = "test"
+async def patch_words(action: WordActionEnum, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     if action == WordActionEnum.RESET:
         for word in db_service.get_words(user_id, lang):
@@ -98,8 +110,8 @@ async def patch_words(action: WordActionEnum):
         raise HTTPException(status_code=400, detail="Invalid action")
 
 @app.get("/word/{word}", response_model=WordResult)
-async def get_word(word: str):
-    user_id = "test"
+async def get_word(word: str, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     word_result = db_service.get_word(user_id, lang, word)
     if word_result is None:
@@ -107,14 +119,14 @@ async def get_word(word: str):
     return word_result
 
 @app.delete("/word/{word}")
-async def get_word(word: str):
-    user_id = "test"
+async def delete_word(word: str, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     return db_service.delete_word(user_id, lang, word)
 
 @app.patch("/word/{word}")
-async def patch_word(word: str, action: WordActionEnum):
-    user_id = "test"  # Hardcoded for now
+async def patch_word(word: str, action: WordActionEnum, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     lang = 'IT'
     if action == WordActionEnum.UNDELETE:
         return db_service.undelete_word(user_id, lang, word)
@@ -124,8 +136,8 @@ async def patch_word(word: str, action: WordActionEnum):
         raise HTTPException(status_code=400, detail="Invalid action")
 
 @app.post("/describe-word", response_model=WordResult)
-async def describe_word(req: DescriptionRequest):
-    user_id = "test"  # For now hardcoded
+async def describe_word(req: DescriptionRequest, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     result = bedrock_service.describe_word(req.description, req.exclusions)
     if result is None:
         return JSONResponse(status_code=204, content=None)
@@ -134,13 +146,14 @@ async def describe_word(req: DescriptionRequest):
     return result
 
 @app.post("/word")
-async def save_word(word_result: WordResult):
-    user_id = "test"  # For now hardcoded
+async def save_word(word_result: WordResult, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     result = db_service.save_word(user_id, word_result)
     return result
 
 @app.delete("/words")
-async def delete_words():
-    user_id = "test"  # For now hardcoded
+async def delete_words(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
     words = db_service.purge_words(user_id, 'IT')
     return words
+

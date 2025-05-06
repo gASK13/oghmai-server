@@ -236,6 +236,78 @@ resource "aws_api_gateway_usage_plan_key" "oghmai_key_association" {
 }
 
 #############################
+# Cognito User Pool
+#############################
+resource "aws_cognito_user_pool" "oghmai_user_pool" {
+  name = "oghmai-user-pool"
+
+  password_policy {
+    minimum_length    = 8
+    require_numbers   = true
+    require_uppercase = true
+    require_lowercase = true
+    require_symbols   = false
+  }
+
+  mfa_configuration = "OPTIONAL"
+
+  auto_verified_attributes = ["email"]
+}
+
+#############################
+# Cognito App Client (Android)
+#############################
+resource "aws_cognito_user_pool_client" "oghmai_android_client" {
+  name                                 = "oghmai-android-client"
+  user_pool_id                         = aws_cognito_user_pool.oghmai_user_pool.id
+  generate_secret                      = false
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile"]
+  enable_token_revocation              = true
+  prevent_user_existence_errors        = "ENABLED"
+  allowed_oauth_flows_user_pool_client = true
+  callback_urls                        = ["net.gask13.oghmai://callback"] # Replace with your app's callback URL
+  logout_urls                          = ["net.gask13.oghmai://logout"]   # Replace with your app's logout URL
+  refresh_token_validity               = 30                               # Days
+  access_token_validity                = 60                               # Minutes
+  id_token_validity                    = 60                               # Minutes
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_USER_PASSWORD_AUTH"]
+}
+
+#############################
+# API Gateway Cognito Authorizer
+#############################
+resource "aws_api_gateway_authorizer" "oghmai_cognito_authorizer" {
+  name            = "oghmai-cognito-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.oghmai_api.id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [aws_cognito_user_pool.oghmai_user_pool.arn]
+  identity_source = "method.request.header.Authorization"
+}
+
+#############################
+# Update API Gateway Integration
+#############################
+resource "aws_api_gateway_method" "oghmai_api_method" {
+  rest_api_id   = aws_api_gateway_rest_api.oghmai_api.id
+  resource_id   = aws_api_gateway_rest_api.oghmai_api.root_resource_id
+  http_method   = "ANY"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.oghmai_cognito_authorizer.id
+}
+
+#############################
+# Update Lambda permissions to allow Cognito claims in the event
+#############################
+resource "aws_lambda_permission" "allow_apigw_with_cognito" {
+  statement_id  = "AllowExecutionFromAPIGatewayWithCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.oghmai_api.execution_arn}/*/*"
+}
+
+#############################
 # Outputs
 #############################
 

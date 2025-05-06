@@ -36,7 +36,7 @@ class WordActionEnum(str, Enum):
     UNDELETE = "UNDELETE"
     RESET = "RESET"
 
-class ResultEnum(str, Enum):  # Define the Enum for result
+class ResultEnum(str, Enum):  # Define an Enum for the result
     INCORRECT = "INCORRECT"
     CORRECT = "CORRECT"
     PARTIAL = "PARTIAL"

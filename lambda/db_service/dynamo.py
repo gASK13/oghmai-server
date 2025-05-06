@@ -22,7 +22,7 @@ def get_words(user_id: str, lang: str, status: str = None, failed_last_test: boo
     logging.info(f"Filtering words for user {user_id} @ {lang} with status={status}, failed_last_test={failed_last_test}, contains={contains}")
 
     try:
-        # Start with the base filter expression for language
+        # Start with a base filter expression for the language
         filter_expression = Attr("lang").eq(lang)
 
         # Add status filter if provided
@@ -342,7 +342,7 @@ def store_challenge(user_id: str, lang: str, description: str, word: str):
     # generate UUID
     challenge_id = str(uuid.uuid4())
 
-    # save challenge to dynamo
+    # save the challenge to dynamo
     try:
         challenge_table.put_item(
             Item={
@@ -402,7 +402,7 @@ def increment_challenge_tries(user_id: str, challenge_id: str):
         raise HTTPException(status_code=500, detail="Error incrementing challenge tries")
 
 def delete_challenge(user_id: str, challenge_id: str):
-    # delete challenge from dynamo
+    # delete the challenge from dynamo
     try:
         challenge_table.delete_item(
             Key={
