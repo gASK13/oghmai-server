@@ -249,7 +249,7 @@ resource "aws_cognito_user_pool" "oghmai_user_pool" {
     require_symbols   = false
   }
 
-  mfa_configuration = "OPTIONAL"
+  mfa_configuration = "OFF"
 
   auto_verified_attributes = ["email"]
 }
