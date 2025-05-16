@@ -1,0 +1,55 @@
+Scrivi mi tutte le forme per il verbo "{verbo}" per Il presente, l' imperfetto, il futuro semplice, il condizionale presente, l'imperativo presente, participio passato e gerundio presente.
+
+Scrivi l'output in forma. Scrivi solo il JSON, nessun altro.
+
+Model:
+{{
+  "Presente": [
+    "io corro",
+    "tu corri",
+    "lui/lei corre",
+    "noi corriamo",
+    "voi correte",
+    "loro corrono"
+  ],
+  "Imperfetto": [
+    "io correvo",
+    "tu correvi",
+    "lui/lei correva",
+    "noi correvamo",
+    "voi correvate",
+    "loro correvano"
+  ],
+  "Futuro Semplice": [
+    "io correrò",
+    "tu correrai",
+    "lui/lei correrà",
+    "noi correremo",
+    "voi correrete",
+    "loro correranno"
+  ],
+  "Condizionale Presente": [
+    "io correrei",
+    "tu correresti",
+    "lui/lei correrebbe",
+    "noi correremmo",
+    "voi correreste",
+    "loro correrebbero"
+  ],
+  "Imperativo Presente": [
+    "tu corri",
+    "lui/lei corra",
+    "noi corriamo",
+    "voi correte",
+    "loro corrano"
+  ],
+  "Participio Passato": [
+    "corso",
+    "corsa",
+    "corsi",
+    "corse"
+  ],
+  "Gerundio Presente": [
+    "correndo"
+  ]
+}}

@@ -69,11 +69,16 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
         try:
             raw_output = call_bedrock(prompt)
 
-            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])  # reverse engineered for now
+            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
 
             if exclusions is not None and parsed["word"] in exclusions:
                 logging.warning(f"Exclusion word found in response at attempt {attempt}, retrying")
                 continue
+
+            # Fill in other meanings
+            raw_output = call_bedrock(load_prompt_template("add_other_meanings").format(json=json.dumps(parsed)))
+
+            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
 
             return WordResult(**parsed)
         except json.JSONDecodeError as e:

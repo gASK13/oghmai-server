@@ -4,13 +4,17 @@ Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizio
 2. La traduzione in inglese della parola.
 3. Una definizione molto breve della parola in Italiano.
 4. Tre frasi in Italiano di esempio che utilizzano la parola in contesti diversi, utilizzando la parola spiegata in plurale e singolare e tempi verbali diversi.
+5. Tipo della parola tra selezione di NOUN, VERB, PRONOUN, ADJECTIVE, OTHER.
 
 La parola non e una delle seguente parole: [{exclusions}].
 
 Struttura il prodotto in questo modo:
 {{
 "word": "la parola in forma singolare per il nome, al maschile per l'aggettivo e infinito per verbo",
-"translation": "traduzione in inglese",
-"definition": "definizione della parola",
-"examples": ["esempio 1", "esempio 2", "esempio 3"]
+"meanings": [ {{
+        "translation": "traduzione in inglese",
+        "definition": "definizione della parola",
+        "examples": ["esempio 1", "esempio 2", "esempio 3"],
+        "type" : "TYPE"
+    }} ]
 }}

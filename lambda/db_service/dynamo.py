@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import boto3
@@ -93,18 +94,15 @@ def get_word(user_id: str, lang: str, word: str):
 
 
 def convert_to_result(item):
-    word_result = WordResult(
-        word=item["word"],
-        language=item["lang"],
-        translation=item["translation"],
-        definition=item["definition"],
-        examples=item["examples"],
-        createdAt=datetime.fromtimestamp(int(item["created_at"])).astimezone(timezone.utc),
-        status=item["status"],
-        lastTest=datetime.fromtimestamp(int(item["last_test"])).astimezone(timezone.utc) if item.get(
-            "last_test") else None,
-        testResults=item["test_results"]
-    )
+    # Not ideal, but I have divergent naming conventions in the DB
+    # Will be fixed during migration and then removed!!!
+    item["createdAt"] = datetime.fromtimestamp(int(item.pop("creadted_at", None))).astimezone(timezone.utc)
+    item["lastTest"] = datetime.fromtimestamp(int(item.pop("last_test", None))).astimezone(timezone.utc) if item.get(
+            "last_test") else None
+    item["testResults"] = item.pop("test_results", None)
+
+    word_result = WordResult(**item)
+
     return word_result
 
 def convert_result_to_item(item: WordResult):
@@ -255,22 +253,17 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "user_id": user_id,
                     "word": word_result.word.lower()
                 },
-                UpdateExpression="SET #translation = :translation, #definition = :definition, "
-                                 "#examples = :examples, #status = :status, #last_test = :last_test, "
+                UpdateExpression="SET #meanings = :meanings, #status = :status, #last_test = :last_test, "
                                  "#test_results = :test_results",
                 ConditionExpression=Attr("lang").eq(word_result.language),  # Ensure lang matches
                 ExpressionAttributeNames={
-                    "#translation": "translation",
-                    "#definition": "definition",
-                    "#examples": "examples",
+                    "#meanings": "meanings",
                     "#status": "status",
                     "#last_test": "last_test",
                     "#test_results": "test_results"
                 },
                 ExpressionAttributeValues={
-                    ":translation": word_result.translation,
-                    ":definition": word_result.definition,
-                    ":examples": word_result.examples,
+                    ":meanings": word_result.meanings,
                     ":status": word_result.status,
                     ":last_test": int(word_result.lastTest.timestamp()) if word_result.lastTest else None,
                     ":test_results": word_result.testResults or []
@@ -282,9 +275,7 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "user_id": user_id,
                     "word": word_result.word.lower(),
                     "lang": word_result.language,
-                    "translation": word_result.translation,
-                    "definition": word_result.definition,
-                    "examples": word_result.examples,
+                    "meanings": word_result.meanings,
                     "created_at": int(datetime.now().timestamp()),
                     "status": StatusEnum.NEW,
                     "last_test": int(datetime.now().timestamp()),

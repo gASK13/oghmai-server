@@ -1,0 +1,5 @@
+Se questa parola ha altri significati o definizioni, aggiungi queste in array "meanings". Se ce non e un altro signficato, non cambi niente.
+
+Scrivi nessun altro, solo il JSON modificato.
+
+{json}

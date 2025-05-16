@@ -41,6 +41,13 @@ class ResultEnum(str, Enum):  # Define an Enum for the result
     CORRECT = "CORRECT"
     PARTIAL = "PARTIAL"
 
+class WordTypeEnum(str, Enum):
+    NOUN = "NOUN"
+    VERB = "VERB"
+    PRONOUN = "PRONOUN"
+    ADJECTIVE = "ADJECTIVE"
+    OTHER = "OTHER"  # This is a catch-all for any word type that doesn't fit into the above categories
+
 class TestResult(BaseModel):
     result: ResultEnum
     suggestion: Optional[str] = None
@@ -51,11 +58,15 @@ class TestResult(BaseModel):
 class TestStatistics(BaseModel):
     available: dict[StatusEnum, int] = {s: 0 for s in StatusEnum}   # Map StatusEnum to integer counts
 
-class WordResult(BaseModel):
-    word: str
+class WordDefinition(BaseModel):
     translation: str
     definition: str
     examples: list[str]
+    type: WordTypeEnum
+
+class WordResult(BaseModel):
+    word: str
+    meanings: list[WordDefinition]
     language: str = "IT"  # Default to IT for now
     createdAt: Optional[datetime] = None
     status: StatusEnum = StatusEnum.UNSAVED
