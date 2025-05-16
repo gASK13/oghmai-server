@@ -1,4 +1,4 @@
-Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizione "ciliegia" in un formato strutturato:
+Fornisci le seguenti informazioni sulla parola definita dalla seguente descrizione "{definition}" in un formato strutturato:
 
 1. La parola che più probabilmente corrisponde alla descrizione in Italiano (in forma singolare per il nome, al maschile per l'aggettivo e infinito per verbo).
 2. La traduzione in inglese della parola.
