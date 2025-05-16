@@ -253,17 +253,15 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "user_id": user_id,
                     "word": word_result.word.lower()
                 },
-                UpdateExpression="SET #meanings = :meanings, #status = :status, #last_test = :last_test, "
+                UpdateExpression="SET #status = :status, #last_test = :last_test, "
                                  "#test_results = :test_results",
                 ConditionExpression=Attr("lang").eq(word_result.language),  # Ensure lang matches
                 ExpressionAttributeNames={
-                    "#meanings": "meanings",
                     "#status": "status",
                     "#last_test": "last_test",
                     "#test_results": "test_results"
                 },
                 ExpressionAttributeValues={
-                    ":meanings": word_result.meanings,
                     ":status": word_result.status,
                     ":last_test": int(word_result.lastTest.timestamp()) if word_result.lastTest else None,
                     ":test_results": word_result.testResults or []
@@ -280,6 +278,7 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "status": StatusEnum.NEW,
                     "last_test": int(datetime.now().timestamp()),
                     "test_results": [],
+                    "schema": "v2"  # Add schema version
                 },
                 ConditionExpression="attribute_not_exists(user_id) AND attribute_not_exists(word) AND attribute_not_exists(lang)"
             )
