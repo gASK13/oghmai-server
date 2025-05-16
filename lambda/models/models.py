@@ -66,7 +66,7 @@ class WordDefinition(BaseModel):
 
 class WordResult(BaseModel):
     word: str
-    meanings: list[WordDefinition]
+    meanings: Optional[list[WordDefinition]] = None
     language: str = "IT"  # Default to IT for now
     createdAt: Optional[datetime] = None
     status: StatusEnum = StatusEnum.UNSAVED
