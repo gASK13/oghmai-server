@@ -98,7 +98,7 @@ def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
     except json.JSONDecodeError as e:
         logging.info(f"Failed to parse JSON response: {str(e)}")
         logging.info(f"Trying to run it through cleanup")
-        cleanup_prompt = load_prompt_template("cleanup_json").format(json=possible_json["output"]["message"]["content"][0]["text"])
+        cleanup_prompt = load_prompt_template("clean_json").format(json=possible_json["output"]["message"]["content"][0]["text"])
         cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
         try:
             result = json.loads(cleanup_response["output"]["message"]["content"][0]["text"])
