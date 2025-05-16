@@ -96,7 +96,7 @@ def get_word(user_id: str, lang: str, word: str):
 def convert_to_result(item):
     # Not ideal, but I have divergent naming conventions in the DB
     # Will be fixed during migration and then removed!!!
-    item["createdAt"] = datetime.fromtimestamp(int(item.pop("creadted_at", None))).astimezone(timezone.utc)
+    item["createdAt"] = datetime.fromtimestamp(int(item.pop("created_at", None))).astimezone(timezone.utc)
     item["lastTest"] = datetime.fromtimestamp(int(item.pop("last_test", None))).astimezone(timezone.utc) if item.get(
             "last_test") else None
     item["testResults"] = item.pop("test_results", None)
