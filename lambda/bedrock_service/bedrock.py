@@ -67,11 +67,7 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            raw_output = call_bedrock(prompt)
-
-            logging.info(f"Bedrock response (first pass): {raw_output}")
-
-            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
+            parsed = call_bedrock_json(prompt)
 
             if exclusions is not None and parsed["word"] in exclusions:
                 logging.warning(f"Exclusion word found in response at attempt {attempt}, retrying")
@@ -79,11 +75,9 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
 
             # Fill in other meanings
             for inner_attempt in range(1, MAX_RETRIES + 1):
-                raw_output = call_bedrock(load_prompt_template("add_other_meanings").format(json=json.dumps(parsed), word=parsed["word"]))
+                enhance_prompt = load_prompt_template("add_other_meanings").format(json=json.dumps(parsed), word=parsed["word"])
 
-                logging.info(f"Bedrock response (other meanings): {raw_output}")
-
-                parsed_m = json.loads(raw_output["output"]["message"]["content"][0]["text"])
+                parsed_m = call_bedrock_json(enhance_prompt)
 
                 if parsed_m["word"] != parsed["word"]:
                     logging.warning(f"Exclusion word found in response at attempt {inner_attempt}, retrying")
@@ -95,6 +89,24 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
     logging.warning(f"Failed to describe word after {MAX_RETRIES} attempts")
     return None
 
+def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
+    possible_json = call_bedrock(prompt, temperature, max_tokens)
+    try:
+        logging.info(f"Raw response from Bedrock: {possible_json}")
+        result = json.loads(possible_json["output"]["message"]["content"][0]["text"])
+        return result
+    except json.JSONDecodeError as e:
+        logging.info(f"Failed to parse JSON response: {str(e)}")
+        logging.info(f"Trying to run it through cleanup")
+        cleanup_prompt = load_prompt_template("cleanup_json").format(json=possible_json["output"]["message"]["content"][0]["text"])
+        cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
+        try:
+            result = json.loads(cleanup_response["output"]["message"]["content"][0]["text"])
+            logging.debug(f"Parsed JSON response after cleanup: {result}")
+            return result
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to parse JSON response after cleanup: {str(e)}")
+            return None
 
 def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
     try:

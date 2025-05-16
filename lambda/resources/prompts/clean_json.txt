@@ -1,0 +1,3 @@
+Remove anything but the JSON part in the following text and return it back. Return just the JSON, nothing else, no markup.
+
+{output}
