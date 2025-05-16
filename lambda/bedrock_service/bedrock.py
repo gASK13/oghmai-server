@@ -69,6 +69,10 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
         try:
             parsed = call_bedrock_json(prompt)
 
+            if parsed is None:
+                logging.warning(f"Failed to parse JSON response from Bedrock at attempt {attempt}, retrying")
+                continue
+
             if exclusions is not None and parsed["word"] in exclusions:
                 logging.warning(f"Exclusion word found in response at attempt {attempt}, retrying")
                 continue
@@ -78,6 +82,10 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
                 enhance_prompt = load_prompt_template("add_other_meanings").format(json=json.dumps(parsed), word=parsed["word"])
 
                 parsed_m = call_bedrock_json(enhance_prompt)
+
+                if parsed_m is None:
+                    logging.warning(f"Failed to parse JSON response from Bedrock at attempt {inner_attempt}, retrying")
+                    continue
 
                 if parsed_m["word"] != parsed["word"]:
                     logging.warning(f"Exclusion word found in response at attempt {inner_attempt}, retrying")
@@ -96,10 +104,10 @@ def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
         result = json.loads(possible_json["output"]["message"]["content"][0]["text"])
         return result
     except json.JSONDecodeError as e:
-        logging.info(f"Failed to parse JSON response: {str(e)}")
-        logging.info(f"Trying to run it through cleanup")
+        logging.info(f"Failed to parse JSON response - trying to run it through cleanup: {str(e)}")
         cleanup_prompt = load_prompt_template("clean_json").format(output=possible_json["output"]["message"]["content"][0]["text"])
         cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
+        logging.info(f"Raw response from Bedrock after cleanup: {cleanup_response}")
         try:
             result = json.loads(cleanup_response["output"]["message"]["content"][0]["text"])
             logging.debug(f"Parsed JSON response after cleanup: {result}")
