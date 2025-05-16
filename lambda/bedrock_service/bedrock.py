@@ -101,7 +101,13 @@ def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
     possible_json = call_bedrock(prompt, temperature, max_tokens)
     try:
         logging.info(f"Raw response from Bedrock: {possible_json}")
-        result = json.loads(possible_json["output"]["message"]["content"][0]["text"])
+        raw_text = possible_json["output"]["message"]["content"][0]["text"]
+
+        # Remove Markdown code block formatting if present
+        if raw_text.startswith("```json"):
+            raw_text = raw_text.strip("```").split("\n", 1)[-1].rsplit("\n", 1)[0]
+
+        result = json.loads(raw_text)
         return result
     except json.JSONDecodeError as e:
         logging.info(f"Failed to parse JSON response - trying to run it through cleanup: {str(e)}")
@@ -109,7 +115,13 @@ def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
         cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
         logging.info(f"Raw response from Bedrock after cleanup: {cleanup_response}")
         try:
-            result = json.loads(cleanup_response["output"]["message"]["content"][0]["text"])
+            cleanup_text = cleanup_response["output"]["message"]["content"][0]["text"]
+
+            # Remove Markdown code block formatting if present
+            if cleanup_text.startswith("```json"):
+                cleanup_text = cleanup_text.strip("```").split("\n", 1)[-1].rsplit("\n", 1)[0]
+
+            result = json.loads(cleanup_text)
             logging.debug(f"Parsed JSON response after cleanup: {result}")
             return result
         except json.JSONDecodeError as e:

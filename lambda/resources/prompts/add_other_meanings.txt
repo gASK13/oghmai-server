@@ -1,4 +1,4 @@
-Se la parola {word} ha molti distinti significati o definizioni, aggiungi tutte queste nella struttura sotto.
+Se la parola "{word}" ha molti distinti significati o definizioni, aggiungi tutte queste nella struttura sotto.
 
 Se ce non e un altro signficato, non cambi niente.
 
