@@ -273,7 +273,7 @@ def save_word(user_id: str, word_result: WordResult, allow_overwrite: bool = Fal
                     "user_id": user_id,
                     "word": word_result.word.lower(),
                     "lang": word_result.language,
-                    "meanings": word_result.meanings,
+                    "meanings": [meaning.dict() for meaning in word_result.meanings],
                     "created_at": int(datetime.now().timestamp()),
                     "status": StatusEnum.NEW,
                     "last_test": int(datetime.now().timestamp()),
