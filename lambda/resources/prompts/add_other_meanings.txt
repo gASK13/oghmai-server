@@ -6,6 +6,6 @@ Pensi che significati sono distinti e se hanno una traduzione diversa in inglese
 
 Per essempio, la parola "banco" ha due significati distinti: "bank" e "desk" che sono diversi. La parola "ciliegia" ha un solo significato: "cherry" - altri significati come "sour cherry" oppure "cherry tree" oppure "cherry wood" non sono abbastanza diversi.
 
-Scrivi nessun altro, solo il JSON modificato.
+Scrivi nessun altro, solo la struttura modificata.
 
 {json}
