@@ -69,6 +69,8 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
         try:
             raw_output = call_bedrock(prompt)
 
+            logging.info(f"Bedrock response (first pass): {raw_output}")
+
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
 
             if exclusions is not None and parsed["word"] in exclusions:
@@ -77,6 +79,8 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
 
             # Fill in other meanings
             raw_output = call_bedrock(load_prompt_template("add_other_meanings").format(json=json.dumps(parsed)))
+
+            logging.info(f"Bedrock response (other meanings): {raw_output}")
 
             parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
 
