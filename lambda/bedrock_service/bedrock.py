@@ -78,13 +78,17 @@ def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
                 continue
 
             # Fill in other meanings
-            raw_output = call_bedrock(load_prompt_template("add_other_meanings").format(json=json.dumps(parsed)))
+            for inner_attempt in range(1, MAX_RETRIES + 1):
+                raw_output = call_bedrock(load_prompt_template("add_other_meanings").format(json=json.dumps(parsed), word=parsed["word"]))
 
-            logging.info(f"Bedrock response (other meanings): {raw_output}")
+                logging.info(f"Bedrock response (other meanings): {raw_output}")
 
-            parsed = json.loads(raw_output["output"]["message"]["content"][0]["text"])
+                parsed_m = json.loads(raw_output["output"]["message"]["content"][0]["text"])
 
-            return WordResult(**parsed)
+                if parsed_m["word"] != parsed["word"]:
+                    logging.warning(f"Exclusion word found in response at attempt {inner_attempt}, retrying")
+
+                return WordResult(**parsed)
         except json.JSONDecodeError as e:
             logging.error(f"Invalid JSON response from Bedrock attempt {attempt}: {str(e)}")
 

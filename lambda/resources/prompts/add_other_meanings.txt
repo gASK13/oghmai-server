@@ -1,11 +1,9 @@
-Se questa parola ha altri distinti significati o definizioni, aggiungi tutte queste in array "meanings".
+Se la parola {word} ha molti distinti significati o definizioni, aggiungi tutte queste nella struttura sotto.
 
 Se ce non e un altro signficato, non cambi niente.
 
-Pensi che significati sono distinti e se hanno una traduzione diversa in inglese, una definizione diversa o un esempio diverso.
+Pensi che significati sono distinti e se hanno una traduzione diversa in inglese, una definizione diversa o un esempio diverso. Per essempio, la parola "banco" ha due significati distinti: "bank" e "desk" che sono diversi. La parola "ciliegia" ha un solo significato: "cherry" - altri significati come "sour cherry" oppure "cherry tree" oppure "cherry wood" non sono abbastanza diversi.
 
-Per essempio, la parola "banco" ha due significati distinti: "bank" e "desk" che sono diversi. La parola "ciliegia" ha un solo significato: "cherry" - altri significati come "sour cherry" oppure "cherry tree" oppure "cherry wood" non sono abbastanza diversi.
-
-Scrivi nessun altro, solo la struttura modificata.
+Scrivi nessun altro, solo la struttura modificata per la parola {word}.
 
 {json}
