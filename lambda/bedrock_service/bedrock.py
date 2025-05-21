@@ -102,31 +102,31 @@ def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
     try:
         logging.info(f"Raw response from Bedrock: {possible_json}")
         raw_text = possible_json["output"]["message"]["content"][0]["text"]
-
-        # Remove Markdown code block formatting if present
-        if raw_text.startswith("```json"):
-            raw_text = raw_text.strip("```").split("\n", 1)[-1].rsplit("\n", 1)[0]
-
-        result = json.loads(raw_text)
+        result = extract_json_from_reply(raw_text)
         return result
-    except json.JSONDecodeError as e:
+    except ValueError | json.JSONDecodeError as e:
         logging.info(f"Failed to parse JSON response - trying to run it through cleanup: {str(e)}")
         cleanup_prompt = load_prompt_template("clean_json").format(output=possible_json["output"]["message"]["content"][0]["text"])
         cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
         logging.info(f"Raw response from Bedrock after cleanup: {cleanup_response}")
         try:
             cleanup_text = cleanup_response["output"]["message"]["content"][0]["text"]
-
-            # Remove Markdown code block formatting if present
-            if cleanup_text.startswith("```json"):
-                cleanup_text = cleanup_text.strip("```").split("\n", 1)[-1].rsplit("\n", 1)[0]
-
-            result = json.loads(cleanup_text)
-            logging.debug(f"Parsed JSON response after cleanup: {result}")
+            result = extract_json_from_reply(cleanup_text)
             return result
         except json.JSONDecodeError as e:
             logging.error(f"Failed to parse JSON response after cleanup: {str(e)}")
             return None
+
+
+def extract_json_from_reply(response):
+    # Remove anything before first { and after last }
+    start = response.find("{")
+    end = response.rfind("}")
+    if start == -1 or end == -1:
+        raise ValueError("Invalid JSON format: no braces found")
+    result = json.loads(response[start:end + 1])
+    return result
+
 
 def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
     try:
