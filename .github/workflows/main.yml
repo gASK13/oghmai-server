@@ -53,4 +53,6 @@ jobs:
         working-directory: infra
 
       - name: Migrate DB schema
-        run: python lambda/db_migration.py
+        run: |
+          pip install -r lambda/db_migration/requirements.txt
+          python lambda/db_migration/db_migration.py
