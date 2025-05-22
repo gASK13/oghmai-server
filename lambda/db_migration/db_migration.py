@@ -61,7 +61,6 @@ def enrich_with_bedrock(item):
             return True
     except Exception as e:
         logging.error(f"Error enriching item with Bedrock: {str(e)}")
-        raise
 
     return False
 
