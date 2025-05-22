@@ -1,10 +1,10 @@
 Se la parola "{word}" ha molti distinti significati o definizioni, aggiungi tutte queste nella struttura sotto.
 
-Se ce non e un altro signficato, non cambi niente.
+Se ce non e un altro significato, non cambi niente.
 
 Pensi che significati sono distinti e se hanno una traduzione diversa in inglese, una definizione diversa o un esempio diverso. Per essempio, la parola "banco" ha due significati distinti: "bank" e "desk" che sono diversi. La parola "ciliegia" ha un solo significato: "cherry" - altri significati come "sour cherry" oppure "cherry tree" oppure "cherry wood" non sono abbastanza diversi.
 
-Tipo della parola e tra selezione di NOUN, VERB, PRONOUN, ADJECTIVE, OTHER.
+Tipo della parola e tra selezione di NOUN, VERB, PRONOUN, ADJECTIVE, OTHER. Aggiungi tutte le definizioni e significati distinti che hai trovato nella parte "meaning".
 
 Scrivi nessun altro, solo la struttura:
 
