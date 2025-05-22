@@ -28,7 +28,7 @@ jobs:
         run: |
           export PYTHONPATH=layers/oghmai_layer/python
           python lambda/openapi.py
-          mv openapi.yaml infra/
+          mv openapi.yaml infra/        
 
       - uses: aws-actions/configure-aws-credentials@v2
         name: Setup AWS Credentials
@@ -51,3 +51,6 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: infra
+
+      - name: Migrate DB schema
+        run: python lambda/db_migration.py
