@@ -53,7 +53,7 @@ def enrich_with_bedrock(item):
             word=item["word"]
         )
 
-        enriched_data = call_bedrock_json(enhance_prompt)
+        enriched_data = call_bedrock_json(enhance_prompt, max_tokens=2500)
 
         if enriched_data and "meanings" in enriched_data and len(enriched_data["meanings"]) > 0:
             # Update the meanings in the item
