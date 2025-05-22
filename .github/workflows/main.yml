@@ -55,4 +55,5 @@ jobs:
       - name: Migrate DB schema
         run: |
           pip install -r lambda/db_migration/requirements.txt
+          PYTHONPATH=lambda
           python lambda/db_migration/db_migration.py
