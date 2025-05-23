@@ -108,25 +108,47 @@ def scan_v1_items():
 def update_v1_to_v2(item):
     # Convert to V2 schema
     v2_item = convert_v1_to_v2(item)
-    enrich_with_bedrock(v2_item)
-    update_item_in_dynamodb(v2_item)
+    if not enrich_with_bedrock(v2_item):
+        return False
+    if not update_item_in_dynamodb(v2_item):
+        return False
+    return True
 
-def main():
-    # Here should be "loop over versions"
-
+def migrate_v1_to_v2():
     # Scan for V1 items
     logging.info("Scanning for V1 items...")
     v1_items = scan_v1_items()
     logging.info(f"Found {len(v1_items)} V1 items")
 
     # Process items in batches
+    failed = []
     for i in v1_items:
-        update_v1_to_v2(i)
+        if not update_v1_to_v2(i):
+            failed.append(i)
+            logging.error(f"Failed to update item: {i['word']}")
         # Sleep briefly to avoid overwhelming the API
         time.sleep(1)
 
-    # Print statistics
-    logging.info("Migration complete!")
+    return failed
+
+def main():
+    # Here should be "loop over versions"
+
+    failed_items = {"v1": []}
+    # Migrate V1 to V2
+    logging.info("Migrating V1 items to V2...")
+    failed_items["v1"] = migrate_v1_to_v2()
+
+    # Print result - if there were failed items, print them
+    # If not print "all fine"
+    for v in failed_items.keys():
+        if failed_items[v]:
+            logging.error(f"Failed to update {len(failed_items['v1'])} items from {v}")
+            for item in failed_items["v1"]:
+                logging.error(f"Failed item: {item}")
+
+    if all(not failed_items[v] for v in failed_items.keys()):
+        logging.info("All items updated successfully")
 
 if __name__ == "__main__":
     main()
