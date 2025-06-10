@@ -1,4 +1,4 @@
-Scrivi mi tutte le forme per il verbo "{verbo}" per Il presente, l' imperfetto, il futuro semplice, il condizionale presente, l'imperativo presente, participio passato e gerundio presente.
+Scrivi mi tutte le forme per il verbo "{verb}" per Il presente, l'imperfetto, il futuro semplice, il condizionale presente, l'imperativo presente, participio passato e gerundio presente.
 
 Scrivi l'output in forma. Scrivi solo il JSON, nessun altro.
 

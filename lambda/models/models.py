@@ -80,3 +80,8 @@ class WordItem(BaseModel):
 
 class WordList(BaseModel):
     words: list[WordItem]
+
+class ExplanationResponse(BaseModel):
+    word: str
+    type: WordTypeEnum
+    explanations: dict[str, list[str]]

@@ -157,3 +157,14 @@ async def delete_words(current_user: dict = Depends(get_current_user)):
     words = db_service.purge_words(user_id, 'IT')
     return words
 
+@app.get("/word/{word}/tenses", response_model=ExplanationResponse)
+async def explain_word(word: str, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
+    lang = 'IT'
+    word_item = db_service.get_word(user_id, lang, word)
+    if word_item is None:
+        raise HTTPException(status_code=404, detail=f"Word {word} not found")
+    result = bedrock_service.get_verb_explanation(word_item)
+    if result is None:
+        return JSONResponse(status_code=204, content=None)
+    return result

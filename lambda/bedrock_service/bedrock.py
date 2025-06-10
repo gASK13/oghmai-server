@@ -1,7 +1,7 @@
 import boto3
 import os
 import json
-from models import WordResult
+from models import WordResult, ExplanationResponse, WordTypeEnum
 from utils import logging
 import random
 
@@ -126,6 +126,37 @@ def extract_json_from_reply(response):
         raise ValueError("Invalid JSON format: no braces found")
     result = json.loads(response[start:end + 1])
     return result
+
+def get_verb_explanation(word: WordResult) -> ExplanationResponse | None:
+    logging.info(f"Getting explanation for word {word}")
+
+    # Currently only VERB type is supported
+    if not any([m.type == WordTypeEnum.VERB for m in word.meanings]):
+        logging.warning(f"Only VERB type is supported for explanations!")
+        return None
+
+    # Use the verb_forms.txt prompt for VERB type
+    prompt = load_prompt_template("verb_forms").format(verb=word.word)
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            parsed = call_bedrock_json(prompt)
+
+            if parsed is None:
+                logging.warning(f"Failed to parse JSON response from Bedrock at attempt {attempt}, retrying")
+                continue
+
+            # Create the response object
+            return ExplanationResponse(
+                word=word.word,
+                type=WordTypeEnum.VERB,
+                explanations=parsed
+            )
+        except json.JSONDecodeError as e:
+            logging.error(f"Invalid JSON response from Bedrock attempt {attempt}: {str(e)}")
+
+    logging.warning(f"Failed to get explanation for word {word} after {MAX_RETRIES} attempts")
+    return None
 
 
 def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
