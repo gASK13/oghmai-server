@@ -1,7 +1,14 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from datetime import datetime
+
+class WordTranslationPair(BaseModel):
+    word: str
+    translation: str
+
+class MatchTestResponse(BaseModel):
+    pairs: List[WordTranslationPair]
 
 class TestChallenge(BaseModel):
     description: str

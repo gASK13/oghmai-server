@@ -79,6 +79,14 @@ async def get_next_test(current_user: dict = Depends(get_current_user)):
     return next_test
 
 
+@app.get("/test/match", response_model=MatchTestResponse)
+async def get_match_test(count: int = 10, current_user: dict = Depends(get_current_user)):
+    user_id = current_user["user_id"]
+    lang = 'IT'
+    pairs = challenge_service.get_random_word_translation_pairs(user_id, lang, count)
+    return MatchTestResponse(pairs=pairs)
+
+
 @app.put("/test/{ch_id}", response_model=TestResult)
 async def validate_test(ch_id: str, guess: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]

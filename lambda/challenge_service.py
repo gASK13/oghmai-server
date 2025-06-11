@@ -5,6 +5,7 @@ import bedrock_service
 import db_service
 from models import *
 from utils import logging
+from typing import List
 
 FILTER = {
     StatusEnum.NEW: 1,
@@ -98,6 +99,38 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
     return TestResult(result=ResultEnum.INCORRECT, word=challenge["word"], newStatus=word.status, oldStatus=old_status)
 
 
+def get_random_word_translation_pairs(user_id: str, lang: str, count: int) -> List[WordTranslationPair]:
+    """
+    Get random word-translation pairs for the match test.
 
+    Args:
+        user_id: The user ID
+        lang: The language code
+        count: The number of pairs to return
 
+    Returns:
+        A list of WordTranslationPair objects
+    """
+    logging.info(f"Getting random word-translation pairs for user {user_id} @ {lang}, count={count}")
 
+    # Get all words for the user and language
+    word_results = db_service.get_words(user_id, lang)
+
+    # Create a flat list of word-translation pairs
+    all_pairs = []
+    for word_item in word_results:
+        # Get the full word details
+        word_result = db_service.get_word(user_id, lang, word_item.word)
+        if word_result and word_result.meanings:
+            for meaning in word_result.meanings:
+                all_pairs.append(WordTranslationPair(
+                    word=word_result.word,
+                    translation=meaning.translation
+                ))
+
+    # If we don't have enough pairs, return all we have
+    if len(all_pairs) <= count:
+        return all_pairs
+
+    # Randomly select 'count' pairs
+    return random.sample(all_pairs, count)
