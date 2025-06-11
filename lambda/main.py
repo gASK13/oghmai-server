@@ -79,12 +79,12 @@ async def get_next_test(current_user: dict = Depends(get_current_user)):
     return next_test
 
 
-@app.get("/test/match", response_model=MatchTestResponse)
+@app.get("/test/match", response_model=MatchChallenge)
 async def get_match_test(count: int = 10, current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
     lang = 'IT'
     pairs = challenge_service.get_random_word_translation_pairs(user_id, lang, count)
-    return MatchTestResponse(pairs=pairs)
+    return MatchChallenge(pairs=pairs)
 
 
 @app.put("/test/{ch_id}", response_model=TestResult)

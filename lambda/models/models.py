@@ -7,7 +7,7 @@ class WordTranslationPair(BaseModel):
     word: str
     translation: str
 
-class MatchTestResponse(BaseModel):
+class MatchChallenge(BaseModel):
     pairs: List[WordTranslationPair]
 
 class TestChallenge(BaseModel):
