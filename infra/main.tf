@@ -56,9 +56,7 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
 #############################
 resource "aws_dynamodb_table" "vocabulary" {
   name           = "oghmai_vocabulary_words"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
+  billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "user_id"
   range_key      = "word"
 
@@ -78,9 +76,7 @@ resource "aws_dynamodb_table" "vocabulary" {
 #############################
 resource "aws_dynamodb_table" "recycle_bin" {
   name           = "oghmai_vocabulary_recycle_bin"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
+  billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "user_id"
   range_key      = "word"
 
@@ -105,9 +101,7 @@ resource "aws_dynamodb_table" "recycle_bin" {
 #############################
 resource "aws_dynamodb_table" "challenge_table" {
   name           = "oghmai_challenges"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
+  billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "user_id"
   range_key      = "challenge_id"
 
