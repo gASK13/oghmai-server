@@ -9,7 +9,7 @@ from language_support import get_language, normalize_text
 from models import ExplanationResponse, WordResult, WordTypeEnum
 from utils import logging
 
-BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-haiku-5-5")
 MAX_RETRIES = 3
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
@@ -189,22 +189,15 @@ def get_verb_explanation(word: WordResult) -> ExplanationResponse | None:
 
 def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
     try:
-        response = bedrock.invoke_model(
+        return bedrock.converse(
             modelId=BEDROCK_MODEL_ID,
-            body=bytes(json.dumps({
-                "messages": [{"role": "user", "content": [{"text": prompt}]}],
-                "inferenceConfig": {
-                    "maxTokens": max_tokens,
-                    "stopSequences": [],
-                    "temperature": temperature,
-                    "topP": 0.95,
-                    "top_k": 50,
-                },
-            }, ensure_ascii=False), "utf-8"),
-            contentType="application/json",
-            accept="application/json",
+            messages=[{"role": "user", "content": [{"text": prompt}]}],
+            inferenceConfig={
+                "maxTokens": max_tokens,
+                "temperature": temperature,
+                "topP": 0.95,
+            },
         )
-        return json.loads(response["body"].read().decode("utf-8"))
     except Exception as exc:
         logging.exception(f"Error calling Bedrock model: {exc}")
         raise

@@ -150,6 +150,7 @@ resource "aws_lambda_function" "api_handler" {
       VOCABULARY_TABLE = aws_dynamodb_table.vocabulary_v2.name
       TRASH_BIN_TABLE  = aws_dynamodb_table.recycle_bin_v2.name
       CHALLENGE_TABLE  = aws_dynamodb_table.challenge_table.name
+      BEDROCK_MODEL_ID = "us.anthropic.claude-haiku-5-5"
     }
   }
   publish          = true
