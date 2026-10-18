@@ -32,11 +32,9 @@ Security: API Key Auth + Usage Plans (AWS API Gateway)
 
 ## Language support and deployment status
 
-Word APIs accept an optional language selection; stored word details remain tagged with their language. Requests that omit a language use Italian (IT). Verb-form explanations are currently Italian-only; requests for German (DE) or Greek (EL) return no content.
+Word APIs accept an optional language selection (`language=IT|DE|EL`); stored word details remain tagged with their language. Requests that omit a language default to Italian (IT) for backwards compatibility with existing Android clients. Verb-form explanations are currently Italian-only; requests for German (DE) or Greek (EL) return 204 No Content.
 
-Before using DE or EL in production, migrate vocabulary and recycle-bin data to the v2 DynamoDB tables. The legacy key is `(user_id, word)` and cannot distinguish identical spellings in different languages. The language-key migration is a manual offline operator CLI run from a trusted local/admin environment during planned downtime. It does not run in Lambda or CI, and CI does not run either migration automatically.
-
-Follow the [DynamoDB migration runbook](lambda/db_migration/README.md): stop traffic, back up the legacy tables, deploy the v2 code and infrastructure, run the CLI dry run, execute the migration, verify the copied data, then smoke-test and reopen traffic.
+Data migration to the v2 DynamoDB tables (`oghmai_vocabulary_words_v2` and `oghmai_vocabulary_recycle_bin_v2`) is complete and verified. Sort keys use `<LANG>#<word>` (`word_key`), fully isolating vocabulary across different languages even when words share identical spellings. Legacy tables and one-off migration scripts have been decommissioned.
 
 ## How to build (and run) locally
 Assuming you have Python 3.10+, all packages needed, Terraform and AWS credentials setup.
@@ -110,7 +108,7 @@ Option: “Fai una domanda su questa parola” (uses AI to answer, e.g. grammar,
 Endpoints can be found in FastAPI - everything is generated based on that and growing, so no need to keep them here
 
 ## Database Schema (DynamoDB)
-Vocabulary and recycle-bin v2 tables use a language-qualified `word_key` alongside `user_id`, allowing the same spelling to exist in multiple languages. Word records retain their `lang` attribute; definitions and examples use the target language, and translations are in English. See the migration runbook above before deploying multilingual use.
+Vocabulary (`oghmai_vocabulary_words_v2`) and recycle-bin (`oghmai_vocabulary_recycle_bin_v2`) tables use a composite key consisting of partition key `user_id` and language-qualified sort key `word_key` (`<LANG>#<normalised-word>`), allowing the same spelling to exist across multiple languages without collision. Word records retain their `lang` attribute; definitions and examples use the target language, and translations are in English. Challenges are stored in `oghmai_challenges` with TTL-based expiry.
 
 ## UI Screens MVP
 “Cerca parola” screen – input, result + Save/Not Save
@@ -125,7 +123,7 @@ Vocabulary and recycle-bin v2 tables use a language-qualified `word_key` alongsi
 - [x] Integrate Bedrock prompts for Italian, German, and Greek
 - [x] Connect Android client to backend
 - [ ] Basic UI for all 3 modes
-- [ ] Deploy MVP to AWS and test live
+- [x] Deploy MVP backend to AWS and test live
 
 ## Why OghmAI?
 

@@ -52,51 +52,6 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
 }
 
 #############################
-# DynamoDB Table
-#############################
-resource "aws_dynamodb_table" "vocabulary" {
-  name           = "oghmai_vocabulary_words"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "user_id"
-  range_key      = "word"
-
-  attribute {
-    name = "user_id"
-    type = "S"
-  }
-
-  attribute {
-    name = "word"
-    type = "S"
-  }
-}
-
-#############################
-# DynamoDB Recycle Bin Table
-#############################
-resource "aws_dynamodb_table" "recycle_bin" {
-  name           = "oghmai_vocabulary_recycle_bin"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "user_id"
-  range_key      = "word"
-
-  attribute {
-    name = "user_id"
-    type = "S"
-  }
-
-  attribute {
-    name = "word"
-    type = "S"
-  }
-
-  ttl {
-    attribute_name = "ttl"
-    enabled        = true
-  }
-}
-
-#############################
 # Language-qualified vocabulary tables
 #############################
 resource "aws_dynamodb_table" "vocabulary_v2" {
