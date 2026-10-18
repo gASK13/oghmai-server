@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 from enum import Enum
 from datetime import datetime
+from pydantic import field_validator
+from language_support import normalize_language
 
 class WordTranslationPair(BaseModel):
     word: str
@@ -17,6 +19,12 @@ class TestChallenge(BaseModel):
 class DescriptionRequest(BaseModel):
     description: str
     exclusions: list[str] = None
+    language: str = "IT"
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        return normalize_language(value)
 
 class StatusEnum(str, Enum):  # Define the Enum for status
     UNSAVED = "UNSAVED"
@@ -74,11 +82,16 @@ class WordDefinition(BaseModel):
 class WordResult(BaseModel):
     word: str
     meanings: list[WordDefinition] = []
-    language: str = "IT"  # Default to IT for now
+    language: str = "IT"
     createdAt: Optional[datetime] = None
     status: StatusEnum = StatusEnum.UNSAVED
     lastTest: Optional[datetime] = None
     testResults: Optional[list[bool]] = None
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        return normalize_language(value)
 
 class WordItem(BaseModel):
     word: str

@@ -1,0 +1,4 @@
+Ergänze nur klar unterscheidbare Bedeutungen desselben Lemmas. Behalte das Wort und alle vorhandenen Bedeutungen bei; füge keine Ableitungen oder bloßen Varianten hinzu.
+Das Lemma ist „{word}“. Gib Übersetzungen ins Englische und Definitionen sowie Beispielsätze auf Deutsch. Bewahre jedes vorhandene Feld und den Worttyp.
+Gib ausschließlich das vollständige aktualisierte JSON-Objekt mit derselben Struktur zurück:
+{json}

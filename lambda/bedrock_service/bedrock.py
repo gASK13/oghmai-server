@@ -1,200 +1,210 @@
-import boto3
-import os
 import json
-from models import WordResult, ExplanationResponse, WordTypeEnum
-from utils import logging
+import os
 import random
 
-# Optional: store model ID in env vars or config
+import boto3
+from pydantic import ValidationError
+
+from language_support import get_language, normalize_text
+from models import ExplanationResponse, WordResult, WordTypeEnum
+from utils import logging
+
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
 MAX_RETRIES = 3
-
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
+
+def _localized_prompt_name(name: str, language: str) -> str:
+    code = get_language(language).code.lower()
+    return name if code == "it" else f"{name}_{code}"
+
+
 def load_prompt_template_random(name: str) -> str:
-    # Load files in the directory and randomly select one
     template_dir = f"resources/prompts/{name}"
-    try:
-        files = [f for f in os.listdir(template_dir) if f.endswith(".txt")]
-        if not files:
-            raise FileNotFoundError(f"No prompt templates found in {template_dir}")
-        selected_file = random.choice(files)
-        template_path = os.path.join(template_dir, selected_file)
-        with open(template_path, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError as e:
-        logging.error(f"Error loading prompt template from {template_dir}: {str(e)}")
-        raise
+    files = [f for f in os.listdir(template_dir) if f.endswith(".txt")]
+    if not files:
+        raise FileNotFoundError(f"No prompt templates found in {template_dir}")
+    template_path = os.path.join(template_dir, random.choice(files))
+    with open(template_path, "r", encoding="utf-8") as prompt_file:
+        return prompt_file.read()
 
 
 def load_prompt_template(name: str) -> str:
     template_path = f"resources/prompts/{name}.txt"
-    try:
-        with open(template_path, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError as e:
-        logging.error(f"Error loading prompt template from {template_path}: {str(e)}")
-        raise
+    with open(template_path, "r", encoding="utf-8") as prompt_file:
+        return prompt_file.read()
 
-def create_challenge(word: str) -> str | None:
-    logging.info(f"Creating challenge for word {word}")
-    prompt = load_prompt_template_random("create_challenge").format(word=word)
-    raw_output = call_bedrock(prompt)
-    return raw_output["output"]["message"]["content"][0]["text"]
 
-def is_challenge_close(challenge: str, guess: str) -> bool:
-    logging.info(f"Checking if challenge '{challenge}' is close to guess '{guess}'")
-    prompt = load_prompt_template("challenge_check").format(challenge=challenge, guess=guess)
-    raw_output = call_bedrock(prompt)
-    return raw_output["output"]["message"]["content"][0]["text"].strip().lower() == "si"
+def _output_text(response) -> str:
+    return response["output"]["message"]["content"][0]["text"].strip()
 
-def get_challenge_hint(challenge: str, guess: str, word: str) -> str:
-    logging.info(f"Getting hint for challenge '{challenge}' with guess '{guess}' and word '{word}'")
-    prompt = load_prompt_template("challenge_hint").format(challenge=challenge, guess=guess, word=word)
-    raw_output = call_bedrock(prompt)
-    return raw_output["output"]["message"]["content"][0]["text"].strip()
 
-def describe_word(definition: str, exclusions: list[str]) -> WordResult | None:
-    logging.info(f"Describing word from definition {definition} with exclusions {exclusions}")
+def create_challenge(word: str, language: str = "IT") -> str | None:
+    code = get_language(language).code
+    logging.info(f"Creating {code} challenge for word {word}")
+    prompt_name = _localized_prompt_name("create_challenge", code)
+    prompt = load_prompt_template_random(prompt_name).format(word=word)
+    return _output_text(call_bedrock(prompt))
 
-    if not exclusions:
-        prompt = load_prompt_template("describe_word").format(definition=definition)
+
+def is_challenge_close(challenge: str, guess: str, language: str = "IT") -> bool:
+    lang = get_language(language)
+    prompt_name = _localized_prompt_name("challenge_check", lang.code)
+    if lang.code == "IT":
+        prompt = load_prompt_template(prompt_name).format(challenge=challenge, guess=guess)
     else:
-        prompt = load_prompt_template("describe_word_exclusions").format(
-            definition=definition,
-            exclusions=", ".join(exclusions)
-        )
+        prompt = load_prompt_template(prompt_name).format(challenge=challenge, guess=guess)
+    token = normalize_text(_output_text(call_bedrock(prompt)))
+    return token == normalize_text(lang.yes_token)
 
+
+def get_challenge_hint(challenge: str, guess: str, word: str, language: str = "IT") -> str:
+    lang = get_language(language)
+    prompt_name = _localized_prompt_name("challenge_hint", lang.code)
+    prompt = load_prompt_template(prompt_name).format(challenge=challenge, guess=guess, word=word)
+    return _output_text(call_bedrock(prompt))
+
+
+def _validated_word_result(data, language: str) -> WordResult:
+    if not isinstance(data, dict):
+        raise TypeError("Bedrock response must be a JSON object")
+    # The model is never authoritative for the language field.
+    safe_data = dict(data)
+    safe_data["language"] = get_language(language).code
+    return WordResult.model_validate(safe_data)
+
+
+def _meaning_key(meaning) -> tuple[str, str, str]:
+    return (
+        normalize_text(meaning.translation),
+        normalize_text(meaning.definition),
+        meaning.type.value,
+    )
+
+
+def describe_word(definition: str, exclusions: list[str] | None = None, language: str = "IT") -> WordResult | None:
+    lang = get_language(language)
+    exclusions = exclusions or []
+    logging.info(f"Describing {lang.code} word from definition {definition}")
+
+    suffix = "" if lang.code == "IT" else f"_{lang.code.lower()}"
+    if exclusions:
+        prompt = load_prompt_template(f"describe_word_exclusions{suffix}").format(
+            definition=definition,
+            exclusions=", ".join(exclusions),
+        )
+    else:
+        prompt = load_prompt_template(f"describe_word{suffix}").format(definition=definition)
+
+    excluded = {normalize_text(item) for item in exclusions}
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             parsed = call_bedrock_json(prompt)
-
             if parsed is None:
-                logging.warning(f"Failed to parse JSON response from Bedrock at attempt {attempt}, retrying")
+                continue
+            result = _validated_word_result(parsed, lang.code)
+            if normalize_text(result.word) in excluded:
+                logging.warning(f"Excluded word returned at attempt {attempt}; retrying")
                 continue
 
-            if exclusions is not None and parsed["word"] in exclusions:
-                logging.warning(f"Exclusion word found in response at attempt {attempt}, retrying")
-                continue
-
-            # Fill in other meanings
+            enhance_prompt = load_prompt_template(f"add_other_meanings{suffix}").format(
+                json=json.dumps(result.model_dump(mode="json", exclude={"language", "status", "createdAt", "lastTest", "testResults"}), ensure_ascii=False),
+                word=result.word,
+            )
             for inner_attempt in range(1, MAX_RETRIES + 1):
-                enhance_prompt = load_prompt_template("add_other_meanings").format(json=json.dumps(parsed), word=parsed["word"])
-
-                parsed_m = call_bedrock_json(enhance_prompt)
-
-                if parsed_m is None:
-                    logging.warning(f"Failed to parse JSON response from Bedrock at attempt {inner_attempt}, retrying")
-                    continue
-
-                if parsed_m["word"] != parsed["word"]:
-                    logging.warning(f"Exclusion word found in response at attempt {inner_attempt}, retrying")
-
-                return WordResult(**parsed)
-        except json.JSONDecodeError as e:
-            logging.error(f"Invalid JSON response from Bedrock attempt {attempt}: {str(e)}")
+                try:
+                    enriched_data = call_bedrock_json(enhance_prompt)
+                    if enriched_data is None:
+                        continue
+                    enriched = _validated_word_result(enriched_data, lang.code)
+                    if normalize_text(enriched.word) != normalize_text(result.word):
+                        logging.warning(f"Enrichment changed the lemma at attempt {inner_attempt}; retrying")
+                        continue
+                    if normalize_text(enriched.word) in excluded:
+                        continue
+                    meanings = list(result.meanings)
+                    known = {_meaning_key(item) for item in meanings}
+                    for meaning in enriched.meanings:
+                        key = _meaning_key(meaning)
+                        if key not in known:
+                            meanings.append(meaning)
+                            known.add(key)
+                    result.meanings = meanings
+                    break
+                except (ValidationError, ValueError, TypeError, KeyError) as exc:
+                    logging.warning(f"Invalid enrichment response at attempt {inner_attempt}: {exc}")
+            return result
+        except (ValidationError, ValueError, TypeError, KeyError) as exc:
+            logging.warning(f"Invalid Bedrock word response at attempt {attempt}: {exc}")
 
     logging.warning(f"Failed to describe word after {MAX_RETRIES} attempts")
     return None
 
+
 def call_bedrock_json(prompt: str, temperature=0.9, max_tokens=500):
-    possible_json = call_bedrock(prompt, temperature, max_tokens)
     try:
-        logging.info(f"Raw response from Bedrock: {possible_json}")
-        raw_text = possible_json["output"]["message"]["content"][0]["text"]
-        result = extract_json_from_reply(raw_text)
-        return result
-    except ValueError | json.JSONDecodeError as e:
-        logging.info(f"Failed to parse JSON response - trying to run it through cleanup: {str(e)}")
-        cleanup_prompt = load_prompt_template("clean_json").format(output=possible_json["output"]["message"]["content"][0]["text"])
-        cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
-        logging.info(f"Raw response from Bedrock after cleanup: {cleanup_response}")
+        response = call_bedrock(prompt, temperature, max_tokens)
+        return extract_json_from_reply(_output_text(response))
+    except (ValueError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        logging.info(f"Failed to parse Bedrock JSON; attempting cleanup: {exc}")
         try:
-            cleanup_text = cleanup_response["output"]["message"]["content"][0]["text"]
-            result = extract_json_from_reply(cleanup_text)
-            return result
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse JSON response after cleanup: {str(e)}")
+            raw = _output_text(response)
+            cleanup_prompt = load_prompt_template("clean_json").format(output=raw)
+            cleanup_response = call_bedrock(cleanup_prompt, temperature, max_tokens)
+            return extract_json_from_reply(_output_text(cleanup_response))
+        except (ValueError, json.JSONDecodeError, KeyError, TypeError, UnboundLocalError) as cleanup_exc:
+            logging.warning(f"Failed to parse Bedrock JSON after cleanup: {cleanup_exc}")
             return None
 
 
-def extract_json_from_reply(response):
-    # Remove anything before first { and after last }
+def extract_json_from_reply(response: str):
     start = response.find("{")
     end = response.rfind("}")
-    if start == -1 or end == -1:
-        raise ValueError("Invalid JSON format: no braces found")
+    if start == -1 or end == -1 or end < start:
+        raise ValueError("Invalid JSON format: no JSON object found")
     result = json.loads(response[start:end + 1])
+    if not isinstance(result, dict):
+        raise ValueError("Expected a JSON object")
     return result
 
-def get_verb_explanation(word: WordResult) -> ExplanationResponse | None:
-    logging.info(f"Getting explanation for word {word}")
 
-    # Currently only VERB type is supported
-    if not any([m.type == WordTypeEnum.VERB for m in word.meanings]):
-        logging.warning(f"Only VERB type is supported for explanations!")
+def get_verb_explanation(word: WordResult) -> ExplanationResponse | None:
+    lang = get_language(word.language)
+    if not lang.supports_verb_forms:
+        return None
+    if not any(meaning.type == WordTypeEnum.VERB for meaning in word.meanings):
+        logging.warning("Only VERB type is supported for explanations")
         return None
 
-    # Use the verb_forms.txt prompt for VERB type
     prompt = load_prompt_template("verb_forms").format(verb=word.word)
-
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             parsed = call_bedrock_json(prompt)
-
-            if parsed is None:
-                logging.warning(f"Failed to parse JSON response from Bedrock at attempt {attempt}, retrying")
-                continue
-
-            # Create the response object
-            return ExplanationResponse(
-                word=word.word,
-                type=WordTypeEnum.VERB,
-                explanations=parsed
-            )
-        except json.JSONDecodeError as e:
-            logging.error(f"Invalid JSON response from Bedrock attempt {attempt}: {str(e)}")
-
-    logging.warning(f"Failed to get explanation for word {word} after {MAX_RETRIES} attempts")
+            if isinstance(parsed, dict):
+                return ExplanationResponse(word=word.word, type=WordTypeEnum.VERB, explanations=parsed)
+        except (ValidationError, ValueError, TypeError) as exc:
+            logging.warning(f"Invalid verb explanation at attempt {attempt}: {exc}")
     return None
 
 
 def call_bedrock(prompt: str, temperature=0.9, max_tokens=500):
     try:
-        logging.debug(f"Calling Bedrock with prompt: {prompt}")
-
         response = bedrock.invoke_model(
             modelId=BEDROCK_MODEL_ID,
-            body=bytes(
-                json.dumps({
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": [
-                                {"text": prompt}
-                            ]
-                        }
-                    ],
-                    "inferenceConfig": {
-                        "maxTokens": max_tokens,
-                        "stopSequences": [],
-                        "temperature": temperature,
-                        "topP": 0.95,
-                        "top_k": 50
-                    }
-                }),
-                "utf-8"
-            ),
+            body=bytes(json.dumps({
+                "messages": [{"role": "user", "content": [{"text": prompt}]}],
+                "inferenceConfig": {
+                    "maxTokens": max_tokens,
+                    "stopSequences": [],
+                    "temperature": temperature,
+                    "topP": 0.95,
+                    "top_k": 50,
+                },
+            }, ensure_ascii=False), "utf-8"),
             contentType="application/json",
-            accept="application/json"
+            accept="application/json",
         )
-
-        response_body = response["body"].read().decode("utf-8")
-        result = json.loads(response_body)
-
-        logging.debug(f"Received response from Bedrock: {result}")
-
-        return result
-    except Exception as e:
-        logging.exception(f"Error calling Bedrock model: {str(e)}")
+        return json.loads(response["body"].read().decode("utf-8"))
+    except Exception as exc:
+        logging.exception(f"Error calling Bedrock model: {exc}")
         raise

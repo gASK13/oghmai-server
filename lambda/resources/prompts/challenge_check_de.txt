@@ -1,0 +1,1 @@
+Ist die Vermutung „{guess}“ eine plausible Antwort auf den Hinweis „{challenge}“? Antworte ausschließlich mit JA oder NEIN.

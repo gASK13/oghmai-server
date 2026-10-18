@@ -97,6 +97,48 @@ resource "aws_dynamodb_table" "recycle_bin" {
 }
 
 #############################
+# Language-qualified vocabulary tables
+#############################
+resource "aws_dynamodb_table" "vocabulary_v2" {
+  name         = "oghmai_vocabulary_words_v2"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+  range_key    = "word_key"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "word_key"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "recycle_bin_v2" {
+  name         = "oghmai_vocabulary_recycle_bin_v2"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+  range_key    = "word_key"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "word_key"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+}
+
+#############################
 # DynamoDB Challenge Cache
 #############################
 resource "aws_dynamodb_table" "challenge_table" {
@@ -148,6 +190,13 @@ resource "aws_lambda_function" "api_handler" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   timeout          = 20 # Increase from default (3s) to allow for AI calls later
   memory_size      = 256
+  environment {
+    variables = {
+      VOCABULARY_TABLE = aws_dynamodb_table.vocabulary_v2.name
+      TRASH_BIN_TABLE  = aws_dynamodb_table.recycle_bin_v2.name
+      CHALLENGE_TABLE  = aws_dynamodb_table.challenge_table.name
+    }
+  }
   publish          = true
   layers = [
     aws_lambda_layer_version.oghmai_layer.arn

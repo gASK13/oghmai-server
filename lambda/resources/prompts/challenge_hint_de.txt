@@ -1,0 +1,1 @@
+Gib einen kurzen Hinweis auf Deutsch zur gesuchten Vokabel, ohne die Vokabel „{word}“ oder eine offensichtliche gebeugte Form zu nennen. Hinweis: „{challenge}“. Der bisherige Versuch war „{guess}“. Gib nur den Hinweis aus.

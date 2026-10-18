@@ -11,7 +11,7 @@ Written to try couple things:
 
 ## What is OghmAI?
 
-Goal is a simple Android app for enriching my vocabulary in Italian.
+Goal is a simple Android app for enriching my vocabulary in a target language. The backend currently supports Italian (IT), German (DE), and Greek (EL). Existing API calls that omit a language continue to use Italian for Android compatibility.
 
 The app will have a few modes:
 - Mode "I am looking for a word that means what I describe" with an option to save or not save it for my vocabulary
@@ -29,6 +29,14 @@ Data: DynamoDB.
 AI: Bedrock (later ChatGPT API or something else)
 IaC: Terraform
 Security: API Key Auth + Usage Plans (AWS API Gateway)
+
+## Language support and deployment status
+
+Word APIs accept an optional language selection; stored word details remain tagged with their language. Requests that omit a language use Italian (IT). Verb-form explanations are currently Italian-only; requests for German (DE) or Greek (EL) return no content.
+
+Before using DE or EL in production, migrate vocabulary and recycle-bin data to the v2 DynamoDB tables. The legacy key is `(user_id, word)` and cannot distinguish identical spellings in different languages. The language-key migration is a manual offline operator CLI run from a trusted local/admin environment during planned downtime. It does not run in Lambda or CI, and CI does not run either migration automatically.
+
+Follow the [DynamoDB migration runbook](lambda/db_migration/README.md): stop traffic, back up the legacy tables, deploy the v2 code and infrastructure, run the CLI dry run, execute the migration, verify the copied data, then smoke-test and reopen traffic.
 
 ## How to build (and run) locally
 Assuming you have Python 3.10+, all packages needed, Terraform and AWS credentials setup.
@@ -57,14 +65,14 @@ _(User describes meaning, AI suggests target-language word)_
 
 **AI (Bedrock) suggests:**
 “La parola che stai cercando è: timido.”
-With definition + example in Italian only
+With definition + example in the selected target language
 
 **Buttons:** “Salva” / “Non salvare”
 
 **API endpoint:** POST /describe-word
 
 **Bedrock prompt example:**
-"L'utente sta cercando una parola italiana che descrive: 'Quando una persona ha paura di stare con altra gente.' Suggerisci la parola più adatta, la definizione e una frase d'esempio, tutto in italiano."
+The target language is selected by the request; definitions and examples are generated in that language, with Italian used by default.
 
 ### Mode 2: “Ho imparato una parola”
 _(User inputs a word, AI generates definition + sentence, and saves it)_
@@ -82,12 +90,12 @@ User inputs “affascinante”
 
 **Input:** word
 
-**Output:** AI response with definition and example (Italian only)
+**Output:** AI response with definition and example in the selected target language
 
 **DynamoDB save:** word, definition, example, date_added
 
 ### Mode 3: “Visualizza parole imparate”
-_(List of learned words, all in Italian, with ability to ask about any)_
+_(List of learned words in the selected target language, with ability to ask about any)_
 
 **Workflow:**
 List: Words + short preview of definition
@@ -95,24 +103,14 @@ Tap word: See full entry (definition + example)
 Option: “Fai una domanda su questa parola” (uses AI to answer, e.g. grammar, usage, synonyms)
 **API endpoints:**
 - GET /words
-- POST /ask-about-word (user asks a question, AI answers in Italian)
+- POST /ask-about-word (user asks a question about a word)
 
 ## Summary of Endpoints
 
 Endpoints can be found in FastAPI - everything is generated based on that and growing, so no need to keep them here
 
 ## Database Schema (DynamoDB)
-Table: vocab_words
-Partition Key: user_id
-Sort Key: word
-Other fields:
-
-definition (Italian)
-lanuage (IT for now)
-example_sentence (Italian)
-translation (English)
-
-In future we can add source, date added and other metadata.
+Vocabulary and recycle-bin v2 tables use a language-qualified `word_key` alongside `user_id`, allowing the same spelling to exist in multiple languages. Word records retain their `lang` attribute; definitions and examples use the target language, and translations are in English. See the migration runbook above before deploying multilingual use.
 
 ## UI Screens MVP
 “Cerca parola” screen – input, result + Save/Not Save
@@ -124,7 +122,7 @@ In future we can add source, date added and other metadata.
 ## MVP Next Steps
 - [x] Set up Terraform base (Lambda, API Gateway, Dynamo)
 - [x] Build and test FastAPI backend locally
-- [x] Integrate Bedrock for Italian prompts
+- [x] Integrate Bedrock prompts for Italian, German, and Greek
 - [x] Connect Android client to backend
 - [ ] Basic UI for all 3 modes
 - [ ] Deploy MVP to AWS and test live

@@ -187,3 +187,6 @@ openapi.yaml
 
 #IDEA
 .idea/
+
+# Local working handoff document (intentionally not versioned)
+PLAN.md

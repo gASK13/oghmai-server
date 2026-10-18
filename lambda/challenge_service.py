@@ -3,6 +3,7 @@ from datetime import datetime
 
 import bedrock_service
 import db_service
+from language_support import normalize_text
 from models import *
 from utils import logging
 from typing import List
@@ -39,7 +40,7 @@ def get_next_test(user_id: str, lang: str):
     word = random.choice(words)
 
     # get from bedrock
-    desc = bedrock_service.create_challenge(word.word)
+    desc = bedrock_service.create_challenge(word.word, word.language)
 
     # store
     ch_id = db_service.store_challenge(user_id, word.language, desc, word.word)
@@ -49,12 +50,12 @@ def get_next_test(user_id: str, lang: str):
 
 def validate_test(user_id: str, challenge_id: str, guess: str):
     logging.info(f"Validating test {challenge_id} for user {user_id}")
-    guess = guess.strip().lower()
+    guess = normalize_text(guess)
     # get the challenge
     challenge = db_service.load_challenge_result(user_id, challenge_id)
 
     # validate directly
-    if guess == challenge["word"]:
+    if guess == normalize_text(challenge["word"]):
         logging.info(f"Correct test {challenge_id} for user {user_id}")
         word = db_service.get_word(user_id, challenge["lang"], challenge["word"])
         word.testResults.append(True)
@@ -74,10 +75,15 @@ def validate_test(user_id: str, challenge_id: str, guess: str):
         return TestResult(result=ResultEnum.CORRECT, word=challenge["word"], newStatus=word.status, oldStatus=old_status)
 
     # validate "similarity"
-    if challenge["tries"] < MAX_MISSES and bedrock_service.is_challenge_close(challenge["description"], guess):
+    challenge_language = challenge.get("lang", "IT")
+    if challenge["tries"] < MAX_MISSES and bedrock_service.is_challenge_close(
+        challenge["description"], guess, challenge_language
+    ):
         db_service.increment_challenge_tries(user_id, challenge_id)
         logging.info(f"Close guess {guess} for {challenge_id} for user {user_id}")
-        hint = bedrock_service.get_challenge_hint(challenge["description"], guess, challenge["word"])
+        hint = bedrock_service.get_challenge_hint(
+            challenge["description"], guess, challenge["word"], challenge_language
+        )
         return TestResult(result=ResultEnum.PARTIAL, suggestion=hint)
 
     # totally wrong?

@@ -7,6 +7,7 @@ import db_service
 import time
 from utils import logging
 import challenge_service
+from language_support import language_query
 
 # FASTAPI app and AWS Lambda handler
 app = FastAPI()
@@ -63,27 +64,24 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 @app.get("/test", response_model=TestStatistics)
-async def get_available_tests(current_user: dict = Depends(get_current_user)):
+async def get_available_tests(language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    return challenge_service.get_statistics(user_id, lang)
+    return challenge_service.get_statistics(user_id, language)
 
 
 @app.get("/test/next", response_model=TestChallenge)
-async def get_next_test(current_user: dict = Depends(get_current_user)):
+async def get_next_test(language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    next_test = challenge_service.get_next_test(user_id, lang)
+    next_test = challenge_service.get_next_test(user_id, language)
     if next_test is None:
         return JSONResponse(status_code=204, content=None)
     return next_test
 
 
 @app.get("/test/match", response_model=MatchChallenge)
-async def get_match_test(count: int = 10, current_user: dict = Depends(get_current_user)):
+async def get_match_test(count: int = 10, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    pairs = challenge_service.get_random_word_translation_pairs(user_id, lang, count)
+    pairs = challenge_service.get_random_word_translation_pairs(user_id, language, count)
     return MatchChallenge(pairs=pairs)
 
 
@@ -97,56 +95,51 @@ async def get_words(
     status: str = None,
     failed_last_test: bool = False,
     contains: str = None,
+    language: str = Depends(language_query),
     current_user: dict = Depends(get_current_user),
 ):
     user_id = current_user["user_id"]
-    lang = 'IT'
-
-    words = db_service.get_words(user_id, lang, status, failed_last_test, contains)
+    words = db_service.get_words(user_id, language, status, failed_last_test, contains)
 
     return WordList(words=words)
 
 @app.patch("/words")
-async def patch_words(action: WordActionEnum, current_user: dict = Depends(get_current_user)):
+async def patch_words(action: WordActionEnum, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
     if action == WordActionEnum.RESET:
-        for word in db_service.get_words(user_id, lang):
-            db_service.reset_word(user_id, lang, word.word)
+        for word in db_service.get_words(user_id, language):
+            db_service.reset_word(user_id, language, word.word)
         return {"message": "Words reset"}
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
 @app.get("/word/{word}", response_model=WordResult)
-async def get_word(word: str, current_user: dict = Depends(get_current_user)):
+async def get_word(word: str, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    word_result = db_service.get_word(user_id, lang, word)
+    word_result = db_service.get_word(user_id, language, word)
     if word_result is None:
         raise HTTPException(status_code=404, detail=f"Word {word} not found")
     return word_result
 
 @app.delete("/word/{word}")
-async def delete_word(word: str, current_user: dict = Depends(get_current_user)):
+async def delete_word(word: str, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    return db_service.delete_word(user_id, lang, word)
+    return db_service.delete_word(user_id, language, word)
 
 @app.patch("/word/{word}")
-async def patch_word(word: str, action: WordActionEnum, current_user: dict = Depends(get_current_user)):
+async def patch_word(word: str, action: WordActionEnum, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
     if action == WordActionEnum.UNDELETE:
-        return db_service.undelete_word(user_id, lang, word)
+        return db_service.undelete_word(user_id, language, word)
     elif action == WordActionEnum.RESET:
-        return db_service.reset_word(user_id, lang, word)
+        return db_service.reset_word(user_id, language, word)
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
 
 @app.post("/describe-word", response_model=WordResult)
 async def describe_word(req: DescriptionRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    result = bedrock_service.describe_word(req.description, req.exclusions)
+    result = bedrock_service.describe_word(req.description, req.exclusions, req.language)
     if result is None:
         return JSONResponse(status_code=204, content=None)
     existing_word = db_service.get_word(user_id, result.language, result.word)
@@ -160,16 +153,15 @@ async def save_word(word_result: WordResult, current_user: dict = Depends(get_cu
     return result
 
 @app.delete("/words")
-async def delete_words(current_user: dict = Depends(get_current_user)):
+async def delete_words(language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    words = db_service.purge_words(user_id, 'IT')
+    words = db_service.purge_words(user_id, language)
     return words
 
 @app.get("/word/{word}/tenses", response_model=ExplanationResponse)
-async def explain_word(word: str, current_user: dict = Depends(get_current_user)):
+async def explain_word(word: str, language: str = Depends(language_query), current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    lang = 'IT'
-    word_item = db_service.get_word(user_id, lang, word)
+    word_item = db_service.get_word(user_id, language, word)
     if word_item is None:
         raise HTTPException(status_code=404, detail=f"Word {word} not found")
     result = bedrock_service.get_verb_explanation(word_item)

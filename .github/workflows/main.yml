@@ -51,9 +51,3 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: infra
-
-      - name: Migrate DB schema
-        run: |
-          pip install -r lambda/db_migration/requirements.txt
-          cd lambda
-          PYTHONPATH=. python db_migration/db_migration.py
