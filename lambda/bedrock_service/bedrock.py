@@ -9,7 +9,7 @@ from language_support import get_language, normalize_text
 from models import ExplanationResponse, WordResult, WordTypeEnum
 from utils import logging
 
-BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-haiku-5-5")
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
 MAX_RETRIES = 3
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
